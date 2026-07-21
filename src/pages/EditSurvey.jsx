@@ -53,10 +53,41 @@ function EditSurvey() {
     setQuestions(
       questions.map((question) =>
         question.id === questionId
-          ? { ...question, required: !question.required }
+          ? {
+              ...question,
+              required: !question.required,
+            }
           : question,
       ),
     );
+  }
+
+  function handleQuestionTypeChange(questionId, newType) {
+    setQuestions(
+      questions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              type: newType,
+            }
+          : question,
+      ),
+    );
+  }
+
+  function handleAddQuestion() {
+    const newQuestion = {
+      id: `question-${Date.now()}`,
+      text: "",
+      type: "text",
+      required: false,
+    };
+
+    setQuestions([...questions, newQuestion]);
+  }
+
+  function handleDeleteQuestion(questionId) {
+    setQuestions(questions.filter((question) => question.id !== questionId));
   }
 
   function handleSubmit(event) {
@@ -76,9 +107,16 @@ function EditSurvey() {
 
   if (!selectedSurvey) {
     return (
-      <main>
-        <h1>Anket bulunamadı</h1>
-        <p>Bu ID ile eşleşen bir anket bulunmuyor.</p>
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Anket bulunamadı
+          </h1>
+
+          <p className="mt-2 text-slate-600">
+            Bu ID ile eşleşen bir anket bulunmuyor.
+          </p>
+        </div>
       </main>
     );
   }
@@ -111,8 +149,6 @@ function EditSurvey() {
             />
           </div>
 
-          <br />
-
           <div>
             <label
               htmlFor="survey-description"
@@ -130,8 +166,6 @@ function EditSurvey() {
             />
           </div>
 
-          <br />
-
           <section>
             <h2 className="mb-4 text-xl font-bold text-slate-900">
               Anket Soruları
@@ -143,12 +177,22 @@ function EditSurvey() {
                   key={question.id}
                   className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                 >
-                  <label
-                    htmlFor={`question-${question.id}`}
-                    className="mb-2 block text-sm font-semibold text-slate-800"
-                  >
-                    {index + 1}. Soru
-                  </label>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label
+                      htmlFor={`question-${question.id}`}
+                      className="text-sm font-semibold text-slate-800"
+                    >
+                      {index + 1}. Soru
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteQuestion(question.id)}
+                      className="rounded-md px-3 py-1 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                    >
+                      Soruyu Sil x
+                    </button>
+                  </div>
 
                   <input
                     id={`question-${question.id}`}
@@ -160,33 +204,66 @@ function EditSurvey() {
                     className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                   />
 
-                  <div className="mt-3 flex gap-6 text-sm text-slate-600">
-                    <p>
-                      Soru türü:{" "}
-                      <span className="font-semibold text-slate-800">
-                        {question.type}
-                      </span>
-                    </p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor={`question-type-${question.id}`}
+                        className="mb-2 block text-sm font-semibold text-slate-800"
+                      >
+                        Soru türü
+                      </label>
 
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={question.required}
-                        onChange={() => handleRequiredChange(question.id)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
+                      <select
+                        id={`question-type-${question.id}`}
+                        value={question.type}
+                        onChange={(event) =>
+                          handleQuestionTypeChange(
+                            question.id,
+                            event.target.value,
+                          )
+                        }
+                        className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                      >
+                        <option value="multiple-choice">Çoktan Seçmeli</option>
 
-                      <span className="font-semibold text-slate-800">
-                        Zorunlu
+                        <option value="text">Metin</option>
+
+                        <option value="rating">Puanlama</option>
+
+                        <option value="yes-no">Evet / Hayır</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <span className="mb-2 block text-sm font-semibold text-slate-800">
+                        Zorunluluk
                       </span>
-                    </label>
+
+                      <label className="flex h-11 cursor-pointer items-center gap-3 rounded-lg border border-slate-300 bg-white px-4">
+                        <input
+                          type="checkbox"
+                          checked={question.required}
+                          onChange={() => handleRequiredChange(question.id)}
+                          className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-indigo-600"
+                        />
+
+                        <span className="text-sm font-medium text-slate-700">
+                          Bu soru zorunlu
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={handleAddQuestion}
+              className="mt-4 w-full rounded-lg border-2 border-dashed border-indigo-300 px-4 py-3 font-semibold text-indigo-600 transition hover:border-indigo-500 hover:bg-indigo-50"
+            >
+              + Yeni Soru Ekle
+            </button>
           </section>
-
-          <br />
 
           <button
             type="submit"
@@ -196,7 +273,11 @@ function EditSurvey() {
           </button>
         </form>
 
-        {saveMessage && <p>{saveMessage}</p>}
+        {saveMessage && (
+          <p className="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm font-semibold text-green-700">
+            {saveMessage}
+          </p>
+        )}
       </div>
     </main>
   );
