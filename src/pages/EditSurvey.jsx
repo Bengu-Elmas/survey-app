@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import surveys from "../data/surveys.js";
 
@@ -8,10 +8,24 @@ function EditSurvey() {
   const selectedSurvey = surveys.find((survey) => survey.id === surveyId);
 
   const [title, setTitle] = useState(selectedSurvey?.title || "");
+
   const [description, setDescription] = useState(
     selectedSurvey?.description || "",
   );
+
+  const [questions, setQuestions] = useState(selectedSurvey?.questions || []);
+
   const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    if (!selectedSurvey) {
+      return;
+    }
+
+    setTitle(selectedSurvey.title);
+    setDescription(selectedSurvey.description);
+    setQuestions(selectedSurvey.questions);
+  }, [selectedSurvey]);
 
   useEffect(() => {
     if (saveMessage === "") {
@@ -27,16 +41,36 @@ function EditSurvey() {
     };
   }, [saveMessage]);
 
+  function handleQuestionChange(questionId, newText) {
+    setQuestions(
+      questions.map((question) =>
+        question.id === questionId ? { ...question, text: newText } : question,
+      ),
+    );
+  }
+
+  function handleRequiredChange(questionId) {
+    setQuestions(
+      questions.map((question) =>
+        question.id === questionId
+          ? { ...question, required: !question.required }
+          : question,
+      ),
+    );
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
     const updatedSurvey = {
       ...selectedSurvey,
-      title: title,
-      description: description,
+      title,
+      description,
+      questions,
     };
 
     console.log(updatedSurvey);
+
     setSaveMessage("Değişiklikler kaydedildi.");
   }
 
@@ -50,46 +84,120 @@ function EditSurvey() {
   }
 
   return (
-    <main>
-      <h1>Anketi Düzenle</h1>
+    <main className="min-h-screen bg-slate-100 px-6 py-10">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-3xl font-bold text-slate-900">Anketi Düzenle</h1>
 
-      <p>Anket ID: {surveyId}</p>
+        <p className="mt-2 text-sm text-slate-500">Anket ID: {surveyId}</p>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="survey-title">Anket başlığı:</label>
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 space-y-6 rounded-xl bg-white p-6 shadow-sm"
+        >
+          <div>
+            <label
+              htmlFor="survey-title"
+              className="mb-2 block text-sm font-semibold text-slate-800"
+            >
+              Anket başlığı
+            </label>
+
+            <input
+              id="survey-title"
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+
           <br />
 
-          <input
-            id="survey-title"
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </div>
+          <div>
+            <label
+              htmlFor="survey-description"
+              className="mb-2 block text-sm font-semibold text-slate-800"
+            >
+              Anket açıklaması
+            </label>
 
-        <br />
+            <textarea
+              id="survey-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows="5"
+              className="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="survey-description">Anket açıklaması:</label>
           <br />
 
-          <textarea
-            id="survey-description"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows="4"
-            cols="40"
-          />
-        </div>
+          <section>
+            <h2 className="mb-4 text-xl font-bold text-slate-900">
+              Anket Soruları
+            </h2>
 
-        <br />
+            <div className="space-y-4">
+              {questions.map((question, index) => (
+                <div
+                  key={question.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <label
+                    htmlFor={`question-${question.id}`}
+                    className="mb-2 block text-sm font-semibold text-slate-800"
+                  >
+                    {index + 1}. Soru
+                  </label>
 
-        <button type="submit">Kaydet</button>
-      </form>
-      {saveMessage && <p>{saveMessage}</p>}
-      <p>Güncel başlık: {title}</p>
-      <p>Güncel açıklama: {description}</p>
+                  <input
+                    id={`question-${question.id}`}
+                    type="text"
+                    value={question.text}
+                    onChange={(event) =>
+                      handleQuestionChange(question.id, event.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+
+                  <div className="mt-3 flex gap-6 text-sm text-slate-600">
+                    <p>
+                      Soru türü:{" "}
+                      <span className="font-semibold text-slate-800">
+                        {question.type}
+                      </span>
+                    </p>
+
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={question.required}
+                        onChange={() => handleRequiredChange(question.id)}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+
+                      <span className="font-semibold text-slate-800">
+                        Zorunlu
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <br />
+
+          <button
+            type="submit"
+            className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
+          >
+            Kaydet
+          </button>
+        </form>
+
+        {saveMessage && <p>{saveMessage}</p>}
+      </div>
     </main>
   );
 }
