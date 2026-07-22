@@ -29,13 +29,15 @@ function Dashboard() {
         <section className="rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-10 text-white shadow-sm">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-indigo-100">DASHBOARD</p>
+              <p className="font-stack-notch text-sm font-semibold text-indigo-100">
+                DASHBOARD
+              </p>
 
-              <h1 className="mt-2 text-3xl font-bold md:text-4xl">
+              <h1 className="font-stack-notch mt-2 text-3xl font-bold md:text-4xl">
                 Anketlerini tek yerden yönet
               </h1>
 
-              <p className="mt-4 leading-7 text-indigo-100">
+              <p className="font-stack-notch mt-4 leading-7 text-indigo-100">
                 Anketlerini oluştur, düzenle ve katılımcılardan gelen yanıtları
                 kolayca takip et.
               </p>
@@ -52,7 +54,7 @@ function Dashboard() {
 
         {/* İstatistikler */}
         <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-2xl bg-white p-5 shadow-lg shadow-slate-300/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <p className="text-sm font-medium text-slate-500">Toplam Anket</p>
 
             <p className="mt-2 text-3xl font-bold text-slate-900">
@@ -60,7 +62,7 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-2xl bg-white p-5 shadow-lg shadow-slate-300/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <p className="text-sm font-medium text-slate-500">
               Yayındaki Anket
             </p>
@@ -70,7 +72,7 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-2xl bg-white p-5 shadow-lg shadow-slate-300/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <p className="text-sm font-medium text-slate-500">Toplam Yanıt</p>
 
             <p className="mt-2 text-3xl font-bold text-slate-900">
@@ -78,7 +80,7 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-2xl bg-white p-5 shadow-lg shadow-slate-300/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <p className="text-sm font-medium text-slate-500">
               Ortalama Tamamlanma
             </p>
@@ -92,7 +94,9 @@ function Dashboard() {
         {/* Anketler */}
         <section className="mt-10">
           <div className="mb-5">
-            <h2 className="text-2xl font-bold text-slate-900">Anketlerim</h2>
+            <h2 className="font-stack-notch text-2xl font-bold text-slate-900">
+              Anketlerim
+            </h2>
 
             <p className="mt-1 text-sm text-slate-500">
               Oluşturduğun tüm anketleri buradan yönetebilirsin.

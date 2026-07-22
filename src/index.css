@@ -1,1 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@500;600;700&display=swap");
 @import "tailwindcss";
+
+.font-stack-notch {
+  font-family: "Stack Sans Notch", sans-serif;
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 40;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.thank-you-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: draw-check 0.7s ease forwards;
+}

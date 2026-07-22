@@ -26,10 +26,10 @@ function Logo() {
       </div>
 
       <div>
-        <p className="text-lg font-extrabold tracking-tight text-slate-900">
-          SurveyApp
+        <p className="font-stack-notch text-xl font-extrabold tracking-tight text-slate-900">
+          Survey App
         </p>
-        <p className="text-xs text-slate-500">Smart Survey Builder</p>
+        <p className="text-xs text-slate-500">Fikrini paylaş, fark yarat.</p>
       </div>
     </Link>
   );

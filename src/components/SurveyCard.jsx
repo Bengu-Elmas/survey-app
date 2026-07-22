@@ -17,7 +17,9 @@ function SurveyCard({ survey, onShare, onDelete }) {
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{survey.title}</h2>
+          <h2 className="font-stack-notch text-lg font-bold text-slate-900">
+            {survey.title}
+          </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {survey.description}
