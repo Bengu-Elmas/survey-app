@@ -10,32 +10,20 @@ function SurveyFill() {
 
   const questions = selectedSurvey?.questions || [];
 
-  // Her sorunun cevabını tutacak.
-  // Örnek:
-  // {
-  //   "survey-1-question-1": 8,
-  //   "survey-1-question-2": "Evet"
-  // }
   const [answers, setAnswers] = useState({});
-
-  // Zorunlu sorular boş bırakılırsa hata mesajlarını tutar.
   const [errors, setErrors] = useState({});
 
-  // Random User API'den gelen kullanıcı.
   const [participant, setParticipant] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
   const [userError, setUserError] = useState("");
 
-  // API isteğini tekrar çalıştırabilmek için.
   const [userRequest, setUserRequest] = useState(0);
 
-  // Başka bir ankete geçilirse eski cevapları temizle.
   useEffect(() => {
     setAnswers({});
     setErrors({});
   }, [surveyId]);
 
-  // Random User API'den rastgele katılımcı çek.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -82,7 +70,6 @@ function SurveyFill() {
     };
   }, [surveyId, userRequest]);
 
-  // Bir soruya cevap verilip verilmediğini kontrol eder.
   function isAnswered(question, answer) {
     if (question.type === "text") {
       return typeof answer === "string" && answer.trim() !== "";
@@ -91,26 +78,22 @@ function SurveyFill() {
     return answer !== undefined && answer !== null && answer !== "";
   }
 
-  // Bir cevap değiştiğinde answers state'ini günceller.
   function handleAnswerChange(questionId, value) {
     setAnswers((previousAnswers) => ({
       ...previousAnswers,
       [questionId]: value,
     }));
 
-    // Kullanıcı soruyu cevapladıysa varsa hata mesajını temizle.
     setErrors((previousErrors) => ({
       ...previousErrors,
       [questionId]: "",
     }));
   }
 
-  // Kaç sorunun cevaplandığını hesapla.
   const answeredQuestionCount = questions.filter((question) =>
     isAnswered(question, answers[question.id]),
   ).length;
 
-  // İlerleme yüzdesi.
   const progress =
     questions.length > 0
       ? Math.round((answeredQuestionCount / questions.length) * 100)
@@ -121,7 +104,6 @@ function SurveyFill() {
 
     const newErrors = {};
 
-    // Zorunlu soruların hepsini kontrol et.
     questions.forEach((question) => {
       if (question.required && !isAnswered(question, answers[question.id])) {
         newErrors[question.id] = "Bu soru zorunludur.";
@@ -130,7 +112,6 @@ function SurveyFill() {
 
     setErrors(newErrors);
 
-    // Hata varsa ilk hatalı soruya git.
     const firstErrorQuestionId = Object.keys(newErrors)[0];
 
     if (firstErrorQuestionId) {
@@ -156,7 +137,6 @@ function SurveyFill() {
       return;
     }
 
-    // Daha sonra Firestore'a göndereceğimiz nesne.
     const surveyResponse = {
       surveyId: selectedSurvey.id,
 
@@ -175,22 +155,26 @@ function SurveyFill() {
 
     console.log("Gönderilen anket yanıtı:", surveyResponse);
 
-    // Firebase bağlantısından sonra burada
-    // Firestore'a kayıt işlemini yapacağız.
-
     navigate(`/thank-you/${surveyId}`);
   }
 
+  /* ANKET BULUNAMADI */
+
   if (!selectedSurvey) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <div className="mx-auto max-w-2xl rounded-xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <p className="text-sm font-bold tracking-[0.2em] text-amber-700">
+            ANKETE ULAŞILAMADI
+          </p>
+
+          <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
             Anket bulunamadı
           </h1>
 
-          <p className="mt-2 text-slate-600">
-            Bu bağlantıya ait bir anket bulunmuyor.
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
+            Bu bağlantıya ait bir anket bulunmuyor. Anket silinmiş veya bağlantı
+            artık geçerli olmayabilir.
           </p>
         </div>
       </main>
@@ -202,16 +186,20 @@ function SurveyFill() {
       <div className="mx-auto max-w-2xl">
         {/* ANKET BAŞLIĞI */}
 
-        <header className="rounded-xl bg-indigo-600 p-6 text-white shadow-sm">
-          <h1 className="text-2xl font-bold sm:text-3xl">
+        <header className="rounded-3xl bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400 p-7 text-white shadow-xl shadow-amber-900/20">
+          <p className="text-xs font-bold tracking-[0.2em] text-amber-100">
+            SURVEY APP
+          </p>
+
+          <h1 className="font-stack-notch mt-2 text-3xl font-bold sm:text-4xl">
             {selectedSurvey.title}
           </h1>
 
-          <p className="mt-2 text-sm text-indigo-100">
+          <p className="mt-3 leading-6 text-amber-50">
             {selectedSurvey.description}
           </p>
 
-          <div className="mt-4 flex items-center justify-between text-sm text-indigo-100">
+          <div className="mt-6 flex items-center justify-between text-sm font-medium text-amber-50">
             <span>{questions.length} soru</span>
 
             <span>%{progress} tamamlandı</span>
@@ -219,9 +207,9 @@ function SurveyFill() {
 
           {/* İLERLEME ÇUBUĞU */}
 
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-indigo-400">
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-amber-900/40">
             <div
-              className="h-full rounded-full bg-white transition-all duration-300"
+              className="h-full rounded-full bg-white shadow-sm transition-all duration-500"
               style={{
                 width: `${progress}%`,
               }}
@@ -231,9 +219,9 @@ function SurveyFill() {
 
         {/* RANDOM USER */}
 
-        <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="mt-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50 p-5 shadow-lg shadow-amber-200/30">
           {userLoading && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm font-medium text-amber-800">
               Katılımcı profili yükleniyor...
             </p>
           )}
@@ -243,15 +231,17 @@ function SurveyFill() {
               <img
                 src={participant.avatar}
                 alt={participant.fullName}
-                className="h-14 w-14 rounded-full object-cover"
+                className="h-16 w-16 rounded-full border-2 border-amber-200 object-cover shadow-sm"
               />
 
               <div>
-                <p className="font-semibold text-slate-900">
+                <p className="font-stack-notch text-lg font-bold text-amber-950">
                   {participant.fullName}
                 </p>
 
-                <p className="text-sm text-slate-500">{participant.city}</p>
+                <p className="mt-1 text-sm font-medium text-amber-800">
+                  {participant.city}
+                </p>
 
                 <p className="mt-1 text-xs text-slate-400">Random User API</p>
               </div>
@@ -265,7 +255,7 @@ function SurveyFill() {
               <button
                 type="button"
                 onClick={() => setUserRequest((previous) => previous + 1)}
-                className="mt-3 rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                className="mt-3 rounded-lg bg-amber-800 px-4 py-2 text-sm font-semibold text-white transition duration-300 hover:bg-amber-900"
               >
                 Tekrar Dene
               </button>
@@ -275,7 +265,7 @@ function SurveyFill() {
 
         {/* ANKET FORMU */}
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           {questions.map((question, index) => {
             const answer = answers[question.id];
 
@@ -284,23 +274,32 @@ function SurveyFill() {
                 key={question.id}
                 id={`question-${question.id}`}
                 tabIndex={-1}
-                className={`rounded-xl border bg-white p-5 shadow-sm outline-none transition ${
-                  errors[question.id] ? "border-red-400" : "border-slate-200"
+                className={`rounded-2xl bg-gradient-to-br from-white via-white to-amber-50/70 p-6 shadow-lg shadow-amber-200/20 outline-none transition duration-300 hover:shadow-xl hover:shadow-amber-200/30 ${
+                  errors[question.id]
+                    ? "border-2 border-red-400"
+                    : "border border-amber-200"
                 }`}
               >
                 {/* SORU BAŞLIĞI */}
 
-                <h2 className="font-semibold text-slate-900">
-                  {index + 1}. {question.text}
-                  {question.required && (
-                    <span className="ml-1 text-red-500">*</span>
-                  )}
-                </h2>
+                <div className="flex gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-sm font-bold text-amber-800">
+                    {index + 1}
+                  </span>
+
+                  <h2 className="font-stack-notch pt-1 text-lg font-semibold text-amber-950">
+                    {question.text}
+
+                    {question.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </h2>
+                </div>
 
                 {/* PUANLAMA */}
 
                 {question.type === "rating" && (
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-5 flex flex-wrap gap-2">
                     {Array.from(
                       {
                         length: question.maxRating || 10,
@@ -317,10 +316,10 @@ function SurveyFill() {
                             onClick={() =>
                               handleAnswerChange(question.id, rating)
                             }
-                            className={`flex h-11 w-11 items-center justify-center rounded-lg border font-semibold transition ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl border font-semibold transition duration-200 ${
                               selected
-                                ? "border-indigo-600 bg-indigo-600 text-white"
-                                : "border-slate-300 bg-white text-slate-700 hover:border-indigo-400 hover:bg-indigo-50"
+                                ? "scale-105 border-amber-800 bg-amber-800 text-white shadow-md shadow-amber-300/40"
+                                : "border-amber-200 bg-white text-amber-900 hover:border-amber-500 hover:bg-amber-50"
                             }`}
                           >
                             {rating}
@@ -334,14 +333,14 @@ function SurveyFill() {
                 {/* EVET / HAYIR */}
 
                 {question.type === "yes-no" && (
-                  <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="mt-5 grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => handleAnswerChange(question.id, "Evet")}
-                      className={`rounded-lg border px-4 py-3 font-semibold transition ${
+                      className={`rounded-xl border px-4 py-3 font-semibold transition duration-300 ${
                         answer === "Evet"
-                          ? "border-green-500 bg-green-100 text-green-700"
-                          : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                          ? "border-amber-800 bg-amber-800 text-white shadow-md shadow-amber-200/50"
+                          : "border-amber-200 bg-white text-amber-900 hover:bg-amber-50"
                       }`}
                     >
                       Evet
@@ -350,10 +349,10 @@ function SurveyFill() {
                     <button
                       type="button"
                       onClick={() => handleAnswerChange(question.id, "Hayır")}
-                      className={`rounded-lg border px-4 py-3 font-semibold transition ${
+                      className={`rounded-xl border px-4 py-3 font-semibold transition duration-300 ${
                         answer === "Hayır"
-                          ? "border-red-400 bg-red-100 text-red-700"
-                          : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                          ? "border-amber-800 bg-amber-800 text-white shadow-md shadow-amber-200/50"
+                          : "border-amber-200 bg-white text-amber-900 hover:bg-amber-50"
                       }`}
                     >
                       Hayır
@@ -364,14 +363,14 @@ function SurveyFill() {
                 {/* ÇOKTAN SEÇMELİ */}
 
                 {question.type === "multiple-choice" && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-5 space-y-3">
                     {(question.options || []).map((option, optionIndex) => (
                       <label
                         key={`${question.id}-${optionIndex}`}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition ${
+                        className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition duration-200 ${
                           answer === option
-                            ? "border-indigo-500 bg-indigo-50"
-                            : "border-slate-300 bg-white hover:bg-slate-50"
+                            ? "border-amber-600 bg-amber-100 shadow-sm"
+                            : "border-amber-200 bg-white hover:border-amber-400 hover:bg-amber-50"
                         }`}
                       >
                         <input
@@ -382,10 +381,12 @@ function SurveyFill() {
                           onChange={() =>
                             handleAnswerChange(question.id, option)
                           }
-                          className="h-4 w-4 accent-indigo-600"
+                          className="h-4 w-4 accent-amber-700"
                         />
 
-                        <span className="text-sm text-slate-800">{option}</span>
+                        <span className="text-sm font-medium text-amber-950">
+                          {option}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -401,14 +402,14 @@ function SurveyFill() {
                     }
                     rows="4"
                     placeholder="Cevabınızı yazın..."
-                    className="mt-4 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="mt-5 w-full resize-y rounded-xl border border-amber-200 bg-white px-4 py-3 text-amber-950 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                   />
                 )}
 
-                {/* HATA MESAJI */}
+                {/* HATA */}
 
                 {errors[question.id] && (
-                  <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600">
+                  <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
                     {errors[question.id]}
                   </p>
                 )}
@@ -421,7 +422,7 @@ function SurveyFill() {
           <button
             type="submit"
             disabled={userLoading || !participant}
-            className="w-full rounded-xl bg-indigo-600 px-5 py-4 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100"
           >
             Anketi Gönder
           </button>

@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import {
   Bar,
@@ -27,17 +27,27 @@ function Results() {
 
   if (!selectedSurvey) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-            <h1 className="text-2xl font-bold text-slate-900">
-              Anket bulunamadı
-            </h1>
+      <main className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <p className="text-sm font-bold tracking-[0.2em] text-amber-700">
+            SONUÇLARA ULAŞILAMADI
+          </p>
 
-            <p className="mt-2 text-slate-500">
-              Sonuçlarını görüntülemek istediğiniz anket bulunamadı.
-            </p>
-          </div>
+          <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
+            Anket bulunamadı
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
+            Sonuçlarını görüntülemek istediğin ankete ulaşamadık. Anket silinmiş
+            olabilir veya kullandığın bağlantı artık geçerli olmayabilir.
+          </p>
+
+          <Link
+            to="/"
+            className="mt-8 inline-flex items-center rounded-xl bg-amber-800 px-6 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:scale-105 hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </Link>
         </div>
       </main>
     );

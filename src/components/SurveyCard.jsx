@@ -7,17 +7,18 @@ function SurveyCard({ survey, onShare, onDelete }) {
     }
 
     if (status === "Taslak") {
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-200 text-amber-900";
     }
 
     return "bg-slate-100 text-slate-700";
   }
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
+      {/* Başlık */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-stack-notch text-lg font-bold text-slate-900">
+          <h2 className="font-stack-notch text-lg font-bold text-amber-950">
             {survey.title}
           </h2>
 
@@ -35,43 +36,45 @@ function SurveyCard({ survey, onShare, onDelete }) {
         </span>
       </div>
 
+      {/* İstatistikler */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-xs font-medium text-slate-500">Soru Sayısı</p>
+        <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-3">
+          <p className="text-xs font-semibold text-amber-800">Soru Sayısı</p>
 
-          <p className="mt-1 text-lg font-bold text-slate-900">
+          <p className="mt-1 text-lg font-bold text-amber-950">
             {survey.questions.length}
           </p>
         </div>
 
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-xs font-medium text-slate-500">Yanıt Sayısı</p>
+        <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-3">
+          <p className="text-xs font-semibold text-amber-800">Yanıt Sayısı</p>
 
-          <p className="mt-1 text-lg font-bold text-slate-900">
+          <p className="mt-1 text-lg font-bold text-amber-950">
             {survey.responseCount}
           </p>
         </div>
 
-        <div className="col-span-2 rounded-xl bg-slate-50 p-3 sm:col-span-1">
-          <p className="text-xs font-medium text-slate-500">Tamamlanma</p>
+        <div className="col-span-2 rounded-xl border border-amber-100 bg-amber-50/80 p-3 sm:col-span-1">
+          <p className="text-xs font-semibold text-amber-800">Tamamlanma</p>
 
-          <p className="mt-1 text-lg font-bold text-slate-900">
+          <p className="mt-1 text-lg font-bold text-amber-950">
             %{survey.completionRate}
           </p>
         </div>
       </div>
 
+      {/* Butonlar */}
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           to={`/edit/${survey.id}`}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-300 hover:bg-amber-800"
         >
           Düzenle
         </Link>
 
         <Link
           to={`/results/${survey.id}`}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          className="rounded-lg border border-amber-300 bg-white/70 px-4 py-2 text-sm font-semibold text-amber-900 transition duration-300 hover:bg-amber-100"
         >
           Sonuçlar
         </Link>
@@ -81,7 +84,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
           onClick={() => onShare(survey)}
           aria-label="Anketi paylaş"
           title="Anketi paylaş"
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-300 px-3 text-slate-700 transition hover:bg-slate-50"
+          className="flex h-10 items-center gap-2 rounded-lg border border-amber-300 bg-white/70 px-3 text-amber-900 transition duration-300 hover:bg-amber-100"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +109,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
           onClick={() => onDelete(survey.id)}
           aria-label="Anketi sil"
           title="Anketi sil"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+          className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-900 text-amber-50 shadow-sm transition duration-300 hover:scale-105 hover:bg-amber-950 hover:shadow-md"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

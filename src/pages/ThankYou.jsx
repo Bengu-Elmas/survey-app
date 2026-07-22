@@ -26,16 +26,16 @@ function ThankYou() {
   }, []);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-indigo-50 to-violet-100 px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-amber-50 to-amber-100 px-6 py-12">
       <section
-        className={`w-full max-w-xl rounded-3xl border border-white/60 bg-white p-8 text-center shadow-xl shadow-indigo-100/70 transition-all duration-1000 ease-out sm:p-10 ${
+        className={`w-full max-w-2xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-10 text-center shadow-xl shadow-amber-200/50 transition-all duration-1000 ease-out sm:p-12 ${
           isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
         }`}
       >
         {/* TİK İKONU */}
 
         <div
-          className={`mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 transition-all duration-700 ease-out ${
+          className={`mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-amber-100 shadow-md shadow-amber-200/50 transition-all duration-700 ease-out ${
             showCheck ? "scale-100 opacity-100" : "scale-50 opacity-0"
           }`}
         >
@@ -44,13 +44,13 @@ function ThankYou() {
               cx="26"
               cy="26"
               r="23"
-              className="stroke-emerald-500"
+              className="stroke-amber-600"
               strokeWidth="3"
             />
 
             <path
               d="M15 27L22 34L38 18"
-              className={`stroke-emerald-600 ${
+              className={`stroke-amber-800 ${
                 showCheck ? "thank-you-check" : ""
               }`}
               strokeWidth="4"
@@ -62,35 +62,39 @@ function ThankYou() {
 
         {/* YAZI */}
 
-        <p className="mt-7 text-sm font-bold tracking-widest text-indigo-600">
+        <p className="mt-7 text-sm font-bold tracking-[0.2em] text-amber-700">
           ANKET TAMAMLANDI
         </p>
 
-        <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
+        <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 sm:text-5xl">
           Teşekkür ederiz!
         </h1>
 
-        <p className="mx-auto mt-4 max-w-md leading-7 text-slate-600">
-          Yanıtlarınız başarıyla kaydedildi. Ankete zaman ayırdığınız için
-          teşekkür ederiz.
+        <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-amber-900/70">
+          Yanıtların başarıyla kaydedildi. Ankete zaman ayırdığın ve görüşlerini
+          bizimle paylaştığın için teşekkür ederiz.
         </p>
 
+        {/* TAMAMLANAN ANKET */}
+
         {selectedSurvey && (
-          <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <div className="mx-auto mt-7 max-w-lg rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/70 px-6 py-5">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700">
               Tamamlanan Anket
             </p>
 
-            <p className="mt-1 font-semibold text-slate-800">
+            <p className="mt-2 text-lg font-bold text-amber-950">
               {selectedSurvey.title}
             </p>
           </div>
         )}
 
-        <div className="mt-8">
+        {/* ANA SAYFAYA DÖN */}
+
+        <div className="mt-9">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+            className="inline-flex items-center justify-center rounded-xl bg-amber-800 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-105 hover:bg-amber-900 hover:shadow-xl"
           >
             Ana Sayfaya Dön
           </Link>
