@@ -105,6 +105,69 @@ function EditSurvey() {
     setSaveMessage("Değişiklikler kaydedildi.");
   }
 
+  function handleOptionChange(questionId, optionIndex, newValue) {
+    setQuestions(
+      questions.map((question) => {
+        if (question.id !== questionId) {
+          return question;
+        }
+
+        const updatedOptions = [...question.options];
+        updatedOptions[optionIndex] = newValue;
+
+        return {
+          ...question,
+          options: updatedOptions,
+        };
+      }),
+    );
+  }
+
+  function handleAddOption(questionId) {
+    setQuestions(
+      questions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              options: [...(question.options || []), ""],
+            }
+          : question,
+      ),
+    );
+  }
+
+  function handleDeleteOption(questionId, optionIndex) {
+    setQuestions(
+      questions.map((question) => {
+        if (question.id !== questionId) {
+          return question;
+        }
+
+        const updatedOptions = question.options.filter(
+          (_, index) => index !== optionIndex,
+        );
+
+        return {
+          ...question,
+          options: updatedOptions,
+        };
+      }),
+    );
+  }
+
+  function handleMaxRatingChange(questionId, newMaxRating) {
+    setQuestions(
+      questions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              maxRating: Number(newMaxRating),
+            }
+          : question,
+      ),
+    );
+  }
+
   if (!selectedSurvey) {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
@@ -252,6 +315,81 @@ function EditSurvey() {
                         </span>
                       </label>
                     </div>
+
+                    {question.type === "rating" && (
+                      <div className="mt-4">
+                        <label
+                          htmlFor={`max-rating-${question.id}`}
+                          className="mb-2 block text-sm font-semibold text-slate-800"
+                        >
+                          Maksimum puan
+                        </label>
+
+                        <select
+                          id={`max-rating-${question.id}`}
+                          value={question.maxRating || 10}
+                          onChange={(event) =>
+                            handleMaxRatingChange(
+                              question.id,
+                              event.target.value,
+                            )
+                          }
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        >
+                          <option value="5">1 - 5</option>
+                          <option value="10">1 - 10</option>
+                        </select>
+                      </div>
+                    )}
+                    {question.type === "multiple-choice" && (
+                      <div className="mt-4">
+                        <h4 className="mb-2 text-sm font-semibold text-slate-800">
+                          Seçenekler
+                        </h4>
+
+                        <div className="space-y-2">
+                          {question.options?.map((option, optionIndex) => (
+                            <div
+                              key={`${question.id}-option-${optionIndex}`}
+                              className="flex items-center gap-2"
+                            >
+                              <span className="text-sm font-semibold text-slate-500">
+                                {optionIndex + 1}.
+                              </span>
+
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(event) =>
+                                  handleOptionChange(
+                                    question.id,
+                                    optionIndex,
+                                    event.target.value,
+                                  )
+                                }
+                                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeleteOption(question.id, optionIndex)
+                                }
+                                className="rounded-lg px-3 py-2 font-semibold text-red-600 transition hover:bg-red-100"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddOption(question.id)}
+                          className="mt-3 rounded-lg border border-indigo-300 px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                        >
+                          + Seçenek Ekle
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
