@@ -16,7 +16,7 @@ import {
 import surveys from "../data/surveys.js";
 import mockResponses from "../data/mockResponses.js";
 
-const PIE_COLORS = ["#6366f1", "#c4b5fd"];
+const PIE_COLORS = ["#e17100", "#ffb900"];
 
 function Results() {
   const { surveyId } = useParams();

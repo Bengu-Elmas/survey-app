@@ -163,7 +163,6 @@ function CreateSurvey() {
     );
   }
 
-  // Şimdilik gerçek Firebase kaydı yerine anket nesnesini oluşturur.
   function handlePublish(event) {
     event.preventDefault();
 
@@ -190,21 +189,22 @@ function CreateSurvey() {
 
     console.log("Yeni oluşturulan anket:", newSurvey);
 
-    // Firebase bağlandığında burada Firestore'a kaydedeceğiz.
     setPublishMessage("Anket başarıyla yayınlandı.");
   }
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         <div>
-          <p className="text-sm font-semibold text-indigo-600">YENİ ANKET</p>
+          <p className="font-stack-notch text-sm font-semibold text-amber-700">
+            YENİ ANKET
+          </p>
 
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">
+          <h1 className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
             Anket Oluştur
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Anket başlığını belirle, sorularını ekle ve yayınlamaya hazır hale
             getir.
           </p>
@@ -212,14 +212,14 @@ function CreateSurvey() {
 
         <form
           onSubmit={handlePublish}
-          className="mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm"
+          className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
         >
           {/* BAŞLIK */}
 
           <div>
             <label
               htmlFor="survey-title"
-              className="mb-2 block text-sm font-semibold text-slate-800"
+              className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
             >
               Anket başlığı
             </label>
@@ -230,7 +230,7 @@ function CreateSurvey() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Örneğin: Müşteri Memnuniyeti Anketi"
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
             />
           </div>
 
@@ -239,7 +239,7 @@ function CreateSurvey() {
           <div>
             <label
               htmlFor="survey-description"
-              className="mb-2 block text-sm font-semibold text-slate-800"
+              className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
             >
               Anket açıklaması
             </label>
@@ -250,7 +250,7 @@ function CreateSurvey() {
               onChange={(event) => setDescription(event.target.value)}
               rows="4"
               placeholder="Anket hakkında kısa bir açıklama yazın..."
-              className="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
             />
           </div>
 
@@ -259,7 +259,7 @@ function CreateSurvey() {
           <section>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">
+                <h2 className="font-stack-notch mb-2 block text-xl font-bold text-amber-950">
                   Anket Soruları
                 </h2>
 
@@ -270,13 +270,13 @@ function CreateSurvey() {
             </div>
 
             {questions.length === 0 && (
-              <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <p className="font-semibold text-slate-700">
-                  Henüz soru eklenmedi.
+              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-white p-10 text-center shadow-sm shadow-amber-100/50">
+                <p className="font-stack-notch text-xl font-bold text-amber-950">
+                  Henüz soru eklenmedi
                 </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  İlk sorunuzu ekleyerek başlayabilirsiniz.
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-amber-900/70">
+                  Anketini oluşturmaya başlamak için ilk sorunu ekleyebilirsin.
                 </p>
               </div>
             )}
@@ -470,9 +470,9 @@ function CreateSurvey() {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
+            className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100"
           >
-            Yayınla
+            Anketi Gönder
           </button>
         </form>
 
