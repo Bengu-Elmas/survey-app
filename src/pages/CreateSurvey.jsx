@@ -204,7 +204,7 @@ function CreateSurvey() {
             Anket Oluştur
           </h1>
 
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+          <p className="mt-1 text-sm font-medium text-slate-700">
             Anket başlığını belirle, sorularını ekle ve yayınlamaya hazır hale
             getir.
           </p>
@@ -263,7 +263,7 @@ function CreateSurvey() {
                   Anket Soruları
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm font-medium text-slate-700">
                   {questions.length} soru eklendi
                 </p>
               </div>
@@ -285,14 +285,14 @@ function CreateSurvey() {
               {questions.map((question, index) => (
                 <div
                   key={question.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/70 p-5 shadow-md shadow-amber-100/50"
                 >
                   {/* SORU BAŞLIĞI + SİL */}
 
                   <div className="mb-2 flex items-center justify-between">
                     <label
                       htmlFor={`question-${question.id}`}
-                      className="text-sm font-semibold text-slate-800"
+                      className="font-stack-notch text-lg font-bold text-amber-950"
                     >
                       {index + 1}. Soru
                     </label>
@@ -300,7 +300,7 @@ function CreateSurvey() {
                     <button
                       type="button"
                       onClick={() => handleDeleteQuestion(question.id)}
-                      className="rounded-md px-3 py-1 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                      className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
                     >
                       Soruyu Sil ×
                     </button>
@@ -316,7 +316,7 @@ function CreateSurvey() {
                       handleQuestionChange(question.id, event.target.value)
                     }
                     placeholder="Sorunuzu yazın..."
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                   />
 
                   {/* TÜR + ZORUNLULUK */}
@@ -325,7 +325,7 @@ function CreateSurvey() {
                     <div>
                       <label
                         htmlFor={`question-type-${question.id}`}
-                        className="mb-2 block text-sm font-semibold text-slate-800"
+                        className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
                       >
                         Soru türü
                       </label>
@@ -339,7 +339,7 @@ function CreateSurvey() {
                             event.target.value,
                           )
                         }
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                       >
                         <option value="text">Metin</option>
 
@@ -352,19 +352,19 @@ function CreateSurvey() {
                     </div>
 
                     <div>
-                      <span className="mb-2 block text-sm font-semibold text-slate-800">
+                      <span className="font-stack-notch text-lg font-bold text-amber-950">
                         Zorunluluk
                       </span>
 
-                      <label className="flex h-11 cursor-pointer items-center gap-3 rounded-lg border border-slate-300 bg-white px-4">
+                      <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
                         <input
                           type="checkbox"
                           checked={question.required}
                           onChange={() => handleRequiredChange(question.id)}
-                          className="h-4 w-4 cursor-pointer accent-indigo-600"
+                          className="h-4 w-4 cursor-pointer accent-amber-700"
                         />
 
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-amber-950">
                           Bu soru zorunlu
                         </span>
                       </label>
@@ -377,7 +377,7 @@ function CreateSurvey() {
                     <div className="mt-4">
                       <label
                         htmlFor={`max-rating-${question.id}`}
-                        className="mb-2 block text-sm font-semibold text-slate-800"
+                        className="font-stack-notch text-lg font-bold text-amber-950"
                       >
                         Maksimum puan
                       </label>
@@ -388,7 +388,7 @@ function CreateSurvey() {
                         onChange={(event) =>
                           handleMaxRatingChange(question.id, event.target.value)
                         }
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                        className="mt-1 h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-amber-950 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                       >
                         <option value="5">1 - 5</option>
 
@@ -401,7 +401,7 @@ function CreateSurvey() {
 
                   {question.type === "multiple-choice" && (
                     <div className="mt-4">
-                      <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                      <h3 className="font-stack-notch text-lg font-bold text-amber-950">
                         Seçenekler
                       </h3>
 
@@ -411,7 +411,7 @@ function CreateSurvey() {
                             key={`${question.id}-option-${optionIndex}`}
                             className="flex items-center gap-2"
                           >
-                            <span className="text-sm font-semibold text-slate-500">
+                            <span className="w-5 text-center text-sm font-bold text-amber-700">
                               {optionIndex + 1}.
                             </span>
 
@@ -426,7 +426,7 @@ function CreateSurvey() {
                                 )
                               }
                               placeholder="Seçenek..."
-                              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm text-amber-950 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                             />
 
                             <button
@@ -434,7 +434,7 @@ function CreateSurvey() {
                               onClick={() =>
                                 handleDeleteOption(question.id, optionIndex)
                               }
-                              className="rounded-lg px-3 py-2 font-semibold text-red-600 transition hover:bg-red-100"
+                              className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
                             >
                               ×
                             </button>
@@ -445,7 +445,7 @@ function CreateSurvey() {
                       <button
                         type="button"
                         onClick={() => handleAddOption(question.id)}
-                        className="mt-3 rounded-lg border border-indigo-300 px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                        className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:bg-amber-100 hover:border-amber-400"
                       >
                         + Seçenek Ekle
                       </button>
@@ -460,7 +460,7 @@ function CreateSurvey() {
             <button
               type="button"
               onClick={handleAddQuestion}
-              className="mt-4 w-full rounded-lg border-2 border-dashed border-indigo-300 px-4 py-3 font-semibold text-indigo-600 transition hover:border-indigo-500 hover:bg-indigo-50"
+              className="mt-5 w-full rounded-xl border-2 border-dashed border-amber-400 bg-amber-50/50 px-4 py-3 font-semibold text-amber-800 transition duration-300 hover:border-amber-600 hover:bg-amber-100 hover:shadow-md"
             >
               + Yeni Soru Ekle
             </button>

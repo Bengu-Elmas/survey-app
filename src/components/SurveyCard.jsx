@@ -22,7 +22,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
             {survey.title}
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-sm font-medium text-slate-700">
             {survey.description}
           </p>
         </div>

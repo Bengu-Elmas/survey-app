@@ -99,7 +99,7 @@ function Dashboard() {
                 Anketlerim
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm font-medium text-slate-700">
                 Oluşturduğun tüm anketleri buradan yönetebilirsin.
               </p>
             </div>

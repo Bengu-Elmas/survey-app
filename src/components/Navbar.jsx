@@ -11,14 +11,14 @@ function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               to="/"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-amber-900 transition duration-300 hover:bg-amber-100"
+              className="rounded-xl px-5 py-3.5 text-sm font-bold text-amber-900 transition duration-300 hover:bg-amber-100"
             >
               Anketlerim
             </Link>
 
             <Link
               to="/create"
-              className="rounded-xl bg-amber-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-300/30 transition duration-300 hover:-translate-y-0.5 hover:bg-amber-900 hover:shadow-lg"
+              className="rounded-xl bg-amber-800 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-amber-300/30 transition duration-300 hover:-translate-y-0.5 hover:bg-amber-900 hover:shadow-lg"
             >
               + Yeni Anket Oluştur
             </Link>
