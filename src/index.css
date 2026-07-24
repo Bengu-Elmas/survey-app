@@ -1,13 +1,33 @@
 @import url("https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
-/* customized scrollbar */
 html {
   scrollbar-color: #973c00 #f1f5f9;
 }
 
-.font-stack-notch {
-  font-family: "Stack Sans Notch", sans-serif;
+/* Yanıt verenler scrollbar */
+.respondents-scrollbar {
+  scrollbar-color: #973c00 #fffbeb;
+}
+
+/* Chrome, Edge, Safari */
+.respondents-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.respondents-scrollbar::-webkit-scrollbar-track {
+  background: #fffbeb;
+  border-radius: 999px;
+}
+
+.respondents-scrollbar::-webkit-scrollbar-thumb {
+  background: #973c00;
+  border-radius: 999px;
+  border: 2px solid #fffbeb;
+}
+
+.respondents-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #78350f;
 }
 
 @keyframes draw-check {
@@ -24,4 +44,10 @@ html {
   stroke-dasharray: 40;
   stroke-dashoffset: 40;
   animation: draw-check 0.7s ease forwards;
+}
+
+.font-stack-notch {
+  font-family: "Stack Sans Notch", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }

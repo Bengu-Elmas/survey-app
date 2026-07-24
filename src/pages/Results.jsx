@@ -16,8 +16,6 @@ import {
 import surveys from "../data/surveys.js";
 import mockResponses from "../data/mockResponses.js";
 
-const PIE_COLORS = ["#e17100", "#ffb900"];
-
 function Results() {
   const { surveyId } = useParams();
 
@@ -221,15 +219,15 @@ function Results() {
 
         <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-bold tracking-wider text-indigo-600">
+            <p className="font-stack-notch text-sm font-semibold text-amber-700">
               ANKET SONUÇLARI
             </p>
 
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">
+            <h1 className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
               {selectedSurvey.title}
             </h1>
 
-            <p className="mt-2 max-w-2xl text-slate-500">
+            <p className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
               {selectedSurvey.description}
             </p>
           </div>
@@ -238,7 +236,7 @@ function Results() {
             type="button"
             onClick={handleDownloadCSV}
             disabled={responses.length === 0}
-            className="flex w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex w-fit items-center gap-2 rounded-xl border border-amber-300 bg-white px-5 py-3 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -265,13 +263,13 @@ function Results() {
         {/* İSTATİSTİK KARTLARI */}
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-6 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-500">
+              <p className="font-stack-notch text-2xl font-bold text-amber-950">
                 Toplam Yanıt
               </p>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -286,20 +284,22 @@ function Results() {
               </div>
             </div>
 
-            <p className="mt-4 text-4xl font-bold text-slate-900">
+            <p className="font-stack-notch mt-4 text-4xl font-bold text-amber-950">
               {responses.length}
             </p>
 
-            <p className="mt-1 text-sm text-slate-400">katılımcı</p>
+            <p className="mt-1 text-sm font-semibold text-amber-900">
+              Katılımcı
+            </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-6 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-500">
+              <p className="font-stack-notch text-2xl font-bold text-amber-950">
                 Tamamlanma Oranı
               </p>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -316,16 +316,18 @@ function Results() {
               </div>
             </div>
 
-            <p className="mt-4 text-4xl font-bold text-slate-900">
+            <p className="font-stack-notch mt-4 text-4xl font-bold text-amber-950">
               %{selectedSurvey.completionRate}
             </p>
 
-            <p className="mt-1 text-sm text-slate-400">anket tamamlama</p>
+            <p className="mt-1 text-sm font-semibold text-amber-900">
+              Anket Tamamlama
+            </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-6 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-500">
+              <p className="font-stack-notch text-2xl font-bold text-amber-950">
                 Ortalama Puan
               </p>
 
@@ -345,27 +347,25 @@ function Results() {
               </div>
             </div>
 
-            <p className="mt-4 text-4xl font-bold text-slate-900">
+            <p className="font-stack-notch mt-4 text-4xl font-bold text-amber-950">
               {responses.length > 0 ? averageRating : "—"}
             </p>
 
-            <p className="mt-1 text-sm text-slate-400">puanlama soruları</p>
+            <p className="mt-1 text-sm font-semibold text-amber-900">
+              Puanlama Soruları
+            </p>
           </div>
         </section>
 
         {/* YANIT YOKSA */}
 
         {responses.length === 0 ? (
-          <section className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
-              📊
-            </div>
-
-            <h2 className="mt-5 text-xl font-bold text-slate-900">
-              Henüz yanıt bulunmuyor
+          <section className="mt-8 rounded-3xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-6 py-16 text-center shadow-lg shadow-amber-200/30">
+            <h2 className="font-stack-notch mt-5 text-3xl font-bold text-amber-950">
+              Henüz Yanıt Bulunmuyor
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-7 text-amber-900">
               Katılımcılar anketi doldurduğunda sonuçlar burada grafik olarak
               görüntülenecek.
             </p>
@@ -376,29 +376,32 @@ function Results() {
 
             <section className="mt-10">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">
+                <h2 className="font-stack-notch text-sm font-semibold text-amber-700">
                   Soru Sonuçları
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Her soruya verilen yanıtların dağılımı.
+                <p className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
+                  Her Soruya Verilen Yanıtların Dağılımı
                 </p>
               </div>
 
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 {selectedSurvey.questions.map((question, index) => {
                   const questionData = getQuestionData(question);
-
                   const textAnswers = getTextAnswers(question);
+
+                  const yesGradientId = `pie-yes-${question.id}`;
+                  const noGradientId = `pie-no-${question.id}`;
+                  const barGradientId = `bar-gradient-${question.id}`;
 
                   return (
                     <article
                       key={question.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                      className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-6 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-xs font-bold tracking-wider text-indigo-600">
+                          <p className="font-stack-notch text-lg font-bold text-amber-950">
                             SORU {index + 1}
                           </p>
 
@@ -407,7 +410,7 @@ function Results() {
                           </h3>
                         </div>
 
-                        <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+                        <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
                           {getQuestionTypeName(question.type)}
                         </span>
                       </div>
@@ -445,6 +448,47 @@ function Results() {
                         <div className="mt-5 h-72">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
+                              <defs>
+                                <radialGradient
+                                  id={yesGradientId}
+                                  cx="30%"
+                                  cy="25%"
+                                  r="80%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="var(--color-amber-300)"
+                                  />
+                                  <stop
+                                    offset="55%"
+                                    stopColor="var(--color-amber-500)"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor="var(--color-amber-800)"
+                                  />
+                                </radialGradient>
+
+                                <radialGradient
+                                  id={noGradientId}
+                                  cx="30%"
+                                  cy="25%"
+                                  r="80%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="var(--color-amber-50)"
+                                  />
+                                  <stop
+                                    offset="55%"
+                                    stopColor="var(--color-amber-200)"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor="var(--color-amber-500)"
+                                  />
+                                </radialGradient>
+                              </defs>
                               <Pie
                                 data={questionData}
                                 dataKey="count"
@@ -454,16 +498,36 @@ function Results() {
                                 innerRadius={55}
                                 outerRadius={90}
                                 paddingAngle={4}
-                                label={({ name, percent }) =>
-                                  `${name} %${Math.round(percent * 100)}`
-                                }
+                                label={({
+                                  name,
+                                  percent,
+                                  x,
+                                  y,
+                                  textAnchor,
+                                }) => (
+                                  <text
+                                    x={x}
+                                    y={y}
+                                    textAnchor={textAnchor}
+                                    dominantBaseline="central"
+                                    fill="#78350f"
+                                    fontSize={13}
+                                    fontWeight={700}
+                                  >
+                                    {`${name} %${Math.round(percent * 100)}`}
+                                  </text>
+                                )}
                               >
                                 {questionData.map((entry, dataIndex) => (
                                   <Cell
                                     key={entry.name}
-                                    fill={
-                                      PIE_COLORS[dataIndex % PIE_COLORS.length]
-                                    }
+                                    fill={`url(#${
+                                      dataIndex === 0
+                                        ? yesGradientId
+                                        : noGradientId
+                                    })`}
+                                    stroke="var(--color-amber-50)"
+                                    strokeWidth={2}
                                   />
                                 ))}
                               </Pie>
@@ -473,6 +537,27 @@ function Results() {
                                   `${value} kişi`,
                                   "Yanıt",
                                 ]}
+                                contentStyle={{
+                                  backgroundColor: "#fffbeb",
+                                  border: "1px solid #f59e0b",
+                                  borderRadius: "12px",
+                                  boxShadow:
+                                    "0 10px 25px rgba(146, 64, 14, 0.15)",
+                                  padding: "10px 14px",
+                                }}
+                                labelStyle={{
+                                  color: "#78350f",
+                                  fontWeight: 700,
+                                  marginBottom: "4px",
+                                }}
+                                itemStyle={{
+                                  color: "#92400e",
+                                  fontWeight: 600,
+                                }}
+                                cursor={{
+                                  fill: "#fef3c7",
+                                  fillOpacity: 0.45,
+                                }}
                               />
                             </PieChart>
                           </ResponsiveContainer>
@@ -502,38 +587,90 @@ function Results() {
                               <XAxis
                                 dataKey="name"
                                 tick={{
-                                  fontSize: 11,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  fill: "#78350f",
+                                }}
+                                axisLine={{
+                                  stroke: "#d97706",
+                                }}
+                                tickLine={{
+                                  stroke: "#d97706",
                                 }}
                               />
 
                               <YAxis
                                 allowDecimals={false}
                                 tick={{
-                                  fontSize: 11,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  fill: "#78350f",
+                                }}
+                                axisLine={{
+                                  stroke: "#d97706",
+                                }}
+                                tickLine={{
+                                  stroke: "#d97706",
                                 }}
                               />
 
                               <Tooltip
-                                formatter={(value) => {
-                                  const percentage =
-                                    responses.length > 0
-                                      ? Math.round(
-                                          (value / responses.length) * 100,
-                                        )
-                                      : 0;
-
-                                  return [
-                                    `${value} kişi (%${percentage})`,
-                                    "Yanıt",
-                                  ];
+                                formatter={(value) => [
+                                  `${value} kişi`,
+                                  "Yanıt",
+                                ]}
+                                contentStyle={{
+                                  backgroundColor: "#fffbeb",
+                                  border: "1px solid #f59e0b",
+                                  borderRadius: "12px",
+                                  boxShadow:
+                                    "0 10px 25px rgba(146, 64, 14, 0.15)",
+                                  padding: "10px 14px",
+                                }}
+                                labelStyle={{
+                                  color: "#78350f",
+                                  fontWeight: 700,
+                                  marginBottom: "4px",
+                                }}
+                                itemStyle={{
+                                  color: "#92400e",
+                                  fontWeight: 600,
+                                }}
+                                cursor={{
+                                  fill: "#fef3c7",
+                                  fillOpacity: 0.45,
                                 }}
                               />
 
                               <Bar
                                 dataKey="count"
-                                fill="#6366f1"
+                                fill={`url(#${barGradientId})`}
                                 radius={[6, 6, 0, 0]}
                               />
+                              <defs>
+                                <linearGradient
+                                  id={barGradientId}
+                                  x1="0"
+                                  y1="100%"
+                                  x2="0"
+                                  y2="0%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="var(--color-amber-900)"
+                                  />
+
+                                  <stop
+                                    offset="55%"
+                                    stopColor="var(--color-amber-600)"
+                                  />
+
+                                  <stop
+                                    offset="100%"
+                                    stopColor="var(--color-amber-300)"
+                                  />
+                                </linearGradient>
+                              </defs>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -546,52 +683,52 @@ function Results() {
 
             {/* YANIT VERENLER */}
 
-            <section className="mt-10 rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+            <section className="mt-10 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 shadow-lg shadow-amber-200/40">
+              <div className="flex items-center justify-between border-b border-amber-200 px-6 py-5">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">
+                  <h1 className="font-stack-notch text-4xl font-bold text-amber-950">
                     Yanıt Verenler
-                  </h2>
+                  </h1>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm font-semibold text-amber-800">
                     Ankete katılan kullanıcılar
                   </p>
                 </div>
 
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600">
+                <span className="rounded-full bg-amber-200 px-4 py-1.5 text-sm font-bold text-amber-950">
                   {responses.length} kişi
                 </span>
               </div>
 
-              <div className="max-h-96 overflow-y-auto">
+              <div className="respondents-scrollbar max-h-96 overflow-y-auto">
                 {responses.map((response) => (
                   <div
                     key={response.id}
-                    className="flex items-center gap-4 border-b border-slate-100 px-6 py-4 last:border-b-0"
+                    className="flex items-center gap-4 border-b border-amber-200/70 px-6 py-4 transition duration-200 last:border-b-0 hover:bg-amber-100/70"
                   >
                     {response.participant.avatar ? (
                       <img
                         src={response.participant.avatar}
                         alt={response.participant.fullName}
-                        className="h-11 w-11 rounded-full object-cover"
+                        className="h-11 w-11 rounded-full object-cover ring-2 ring-amber-300"
                       />
                     ) : (
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-950 ring-2 ring-amber-300">
                         {getInitials(response.participant)}
                       </div>
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-900">
+                      <p className="truncate font-bold text-amber-950">
                         {response.participant.fullName}
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm font-medium text-amber-800">
                         📍 {response.participant.city}
                       </p>
                     </div>
 
-                    <p className="shrink-0 text-sm text-slate-400">
+                    <p className="shrink-0 text-sm font-semibold text-amber-800">
                       {formatDate(response.submittedAt)}
                     </p>
                   </div>
