@@ -290,7 +290,23 @@ function EditSurvey() {
     });
   }
 
-  // Değişiklikleri kaydeder.
+  function handleSaveDraft() {
+    const draftSurvey = {
+      id: `survey-${Date.now()}`,
+      title: title.trim() || "İsimsiz Anket",
+      description,
+      status: "Taslak",
+      questionCount: questions.length,
+      responseCount: 0,
+      completionRate: 0,
+      questions,
+    };
+
+    console.log("Taslak olarak kaydedilen anket:", draftSurvey);
+
+    setPublishMessage("Anket taslak olarak kaydedildi.");
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -298,10 +314,11 @@ function EditSurvey() {
       ...selectedSurvey,
       title,
       description,
+      questionCount: questions.length,
       questions,
     };
 
-    console.log(updatedSurvey);
+    console.log("Güncellenen anket:", updatedSurvey);
 
     setSaveMessage("Değişiklikler kaydedildi.");
   }
@@ -580,12 +597,22 @@ function EditSurvey() {
 
           {/* KAYDET */}
 
-          <button
-            type="submit"
-            className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100"
-          >
-            Kaydet
-          </button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="w-full rounded-2xl border-2 border-amber-800 bg-amber-50 px-5 py-4 font-semibold text-amber-900 transition duration-300 hover:scale-[1.02] hover:bg-amber-100"
+            >
+              Taslak Olarak Kaydet
+            </button>
+
+            <button
+              type="submit"
+              className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl"
+            >
+              Değişiklikleri Kaydet
+            </button>
+          </div>
         </form>
 
         {saveMessage && (
