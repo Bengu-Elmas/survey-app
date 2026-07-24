@@ -1,6 +1,87 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
+import { DndContext, closestCenter } from "@dnd-kit/core";
+
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
 import surveys from "../data/surveys.js";
+
+/* SÜRÜKLENEBİLİR SORU KARTI */
+function SortableQuestion({ id, index, onDelete, children }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/70 p-5 shadow-md shadow-amber-100/50 ${
+        isDragging ? "relative z-10 opacity-70 shadow-xl" : ""
+      }`}
+    >
+      {/* SORU BAŞLIĞI + SÜRÜKLE + SİL */}
+
+      <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <label
+          htmlFor={`question-${id}`}
+          className="font-stack-notch text-lg font-bold text-amber-950"
+        >
+          {index + 1}. Soru
+        </label>
+
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          {...listeners}
+          aria-label="Soruyu sürükle"
+          className="flex touch-none cursor-grab select-none items-center gap-2 rounded-xl px-3 py-2 text-amber-900 transition duration-200 hover:bg-amber-100 active:cursor-grabbing"
+        >
+          <img
+            src="/dragicon.svg"
+            alt=""
+            draggable="false"
+            className="pointer-events-none h-7 w-7"
+          />
+
+          <span className="font-stack-notch pointer-events-none text-sm font-bold">
+            Soruyu Sürükle
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(id)}
+          className="justify-self-end rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
+        >
+          Soruyu Sil ×
+        </button>
+      </div>
+
+      {children}
+    </div>
+  );
+}
 
 function EditSurvey() {
   const { surveyId } = useParams();
@@ -41,14 +122,21 @@ function EditSurvey() {
     };
   }, [saveMessage]);
 
+  // Soru metnini değiştirir.
   function handleQuestionChange(questionId, newText) {
     setQuestions(
       questions.map((question) =>
-        question.id === questionId ? { ...question, text: newText } : question,
+        question.id === questionId
+          ? {
+              ...question,
+              text: newText,
+            }
+          : question,
       ),
     );
   }
 
+  // Zorunluluk durumunu değiştirir.
   function handleRequiredChange(questionId) {
     setQuestions(
       questions.map((question) =>
@@ -62,19 +150,41 @@ function EditSurvey() {
     );
   }
 
+  // Soru türünü değiştirir.
   function handleQuestionTypeChange(questionId, newType) {
     setQuestions(
-      questions.map((question) =>
-        question.id === questionId
-          ? {
-              ...question,
-              type: newType,
-            }
-          : question,
-      ),
+      questions.map((question) => {
+        if (question.id !== questionId) {
+          return question;
+        }
+
+        // Çoktan seçmeliye geçilirse başlangıç seçenekleri oluştur.
+        if (newType === "multiple-choice") {
+          return {
+            ...question,
+            type: newType,
+            options: question.options || ["", ""],
+          };
+        }
+
+        // Puanlamaya geçilirse varsayılan max değer 10 olsun.
+        if (newType === "rating") {
+          return {
+            ...question,
+            type: newType,
+            maxRating: question.maxRating || 10,
+          };
+        }
+
+        return {
+          ...question,
+          type: newType,
+        };
+      }),
     );
   }
 
+  // Yeni soru ekler.
   function handleAddQuestion() {
     const newQuestion = {
       id: `question-${Date.now()}`,
@@ -86,25 +196,12 @@ function EditSurvey() {
     setQuestions([...questions, newQuestion]);
   }
 
+  // Soruyu siler.
   function handleDeleteQuestion(questionId) {
     setQuestions(questions.filter((question) => question.id !== questionId));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const updatedSurvey = {
-      ...selectedSurvey,
-      title,
-      description,
-      questions,
-    };
-
-    console.log(updatedSurvey);
-
-    setSaveMessage("Değişiklikler kaydedildi.");
-  }
-
+  // Çoktan seçmeli seçeneğin metnini değiştirir.
   function handleOptionChange(questionId, optionIndex, newValue) {
     setQuestions(
       questions.map((question) => {
@@ -112,7 +209,8 @@ function EditSurvey() {
           return question;
         }
 
-        const updatedOptions = [...question.options];
+        const updatedOptions = [...(question.options || [])];
+
         updatedOptions[optionIndex] = newValue;
 
         return {
@@ -123,6 +221,7 @@ function EditSurvey() {
     );
   }
 
+  // Yeni seçenek ekler.
   function handleAddOption(questionId) {
     setQuestions(
       questions.map((question) =>
@@ -136,6 +235,7 @@ function EditSurvey() {
     );
   }
 
+  // Seçenek siler.
   function handleDeleteOption(questionId, optionIndex) {
     setQuestions(
       questions.map((question) => {
@@ -143,7 +243,7 @@ function EditSurvey() {
           return question;
         }
 
-        const updatedOptions = question.options.filter(
+        const updatedOptions = (question.options || []).filter(
           (_, index) => index !== optionIndex,
         );
 
@@ -155,6 +255,7 @@ function EditSurvey() {
     );
   }
 
+  // Puanlama maksimum değerini değiştirir.
   function handleMaxRatingChange(questionId, newMaxRating) {
     setQuestions(
       questions.map((question) =>
@@ -166,6 +267,43 @@ function EditSurvey() {
           : question,
       ),
     );
+  }
+
+  // Sürükleme bittiğinde soruların sırasını değiştirir.
+  function handleDragEnd(event) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    setQuestions((currentQuestions) => {
+      const oldIndex = currentQuestions.findIndex(
+        (question) => question.id === active.id,
+      );
+
+      const newIndex = currentQuestions.findIndex(
+        (question) => question.id === over.id,
+      );
+
+      return arrayMove(currentQuestions, oldIndex, newIndex);
+    });
+  }
+
+  // Değişiklikleri kaydeder.
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const updatedSurvey = {
+      ...selectedSurvey,
+      title,
+      description,
+      questions,
+    };
+
+    console.log(updatedSurvey);
+
+    setSaveMessage("Değişiklikler kaydedildi.");
   }
 
   if (!selectedSurvey) {
@@ -205,6 +343,8 @@ function EditSurvey() {
           onSubmit={handleSubmit}
           className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
         >
+          {/* BAŞLIK */}
+
           <div>
             <label
               htmlFor="survey-title"
@@ -221,6 +361,8 @@ function EditSurvey() {
               className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
             />
           </div>
+
+          {/* AÇIKLAMA */}
 
           <div>
             <label
@@ -239,183 +381,191 @@ function EditSurvey() {
             />
           </div>
 
+          {/* SORULAR */}
+
           <section>
             <h2 className="font-stack-notch mb-4 text-xl font-bold text-amber-950">
               Anket Soruları
             </h2>
 
-            <div className="space-y-5">
-              {questions.map((question, index) => (
-                <div
-                  key={question.id}
-                  className="rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/70 p-5 shadow-md shadow-amber-100/50"
-                >
-                  {/* SORU BAŞLIĞI + SİL */}
+            {/* DRAG & DROP */}
 
-                  <div className="mb-3 flex items-center justify-between">
-                    <label
-                      htmlFor={`question-${question.id}`}
-                      className="font-stack-notch text-lg font-bold text-amber-950"
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={questions.map((question) => question.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-5">
+                  {questions.map((question, index) => (
+                    <SortableQuestion
+                      key={question.id}
+                      id={question.id}
+                      index={index}
+                      onDelete={handleDeleteQuestion}
                     >
-                      {index + 1}. Soru
-                    </label>
+                      {/* SORU METNİ */}
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
-                    >
-                      Soruyu Sil ×
-                    </button>
-                  </div>
-
-                  {/* SORU METNİ */}
-
-                  <input
-                    id={`question-${question.id}`}
-                    type="text"
-                    value={question.text}
-                    onChange={(event) =>
-                      handleQuestionChange(question.id, event.target.value)
-                    }
-                    placeholder="Sorunuzu yazın..."
-                    className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                  />
-
-                  {/* SORU TÜRÜ + ZORUNLULUK */}
-
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor={`question-type-${question.id}`}
-                        className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
-                      >
-                        Soru türü
-                      </label>
-
-                      <select
-                        id={`question-type-${question.id}`}
-                        value={question.type}
+                      <input
+                        id={`question-${question.id}`}
+                        type="text"
+                        value={question.text}
                         onChange={(event) =>
-                          handleQuestionTypeChange(
-                            question.id,
-                            event.target.value,
-                          )
+                          handleQuestionChange(question.id, event.target.value)
                         }
-                        className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                      >
-                        <option value="multiple-choice">Çoktan Seçmeli</option>
-                        <option value="text">Metin</option>
-                        <option value="rating">Puanlama</option>
-                        <option value="yes-no">Evet / Hayır</option>
-                      </select>
-                    </div>
+                        placeholder="Sorunuzu yazın..."
+                        className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      />
 
-                    <div>
-                      <span className="font-stack-notch mb-1 block text-lg font-bold text-amber-950">
-                        Zorunluluk
-                      </span>
+                      {/* SORU TÜRÜ + ZORUNLULUK */}
 
-                      <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
-                        <input
-                          type="checkbox"
-                          checked={question.required}
-                          onChange={() => handleRequiredChange(question.id)}
-                          className="h-4 w-4 cursor-pointer accent-amber-700"
-                        />
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor={`question-type-${question.id}`}
+                            className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
+                          >
+                            Soru türü
+                          </label>
 
-                        <span className="text-sm font-medium text-amber-950">
-                          Bu soru zorunlu
-                        </span>
-                      </label>
-                    </div>
+                          <select
+                            id={`question-type-${question.id}`}
+                            value={question.type}
+                            onChange={(event) =>
+                              handleQuestionTypeChange(
+                                question.id,
+                                event.target.value,
+                              )
+                            }
+                            className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          >
+                            <option value="multiple-choice">
+                              Çoktan Seçmeli
+                            </option>
 
-                    {/* PUANLAMA */}
+                            <option value="text">Metin</option>
 
-                    {question.type === "rating" && (
-                      <div className="sm:col-span-2">
-                        <label
-                          htmlFor={`max-rating-${question.id}`}
-                          className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
-                        >
-                          Maksimum puan
-                        </label>
+                            <option value="rating">Puanlama</option>
 
-                        <select
-                          id={`max-rating-${question.id}`}
-                          value={question.maxRating || 10}
-                          onChange={(event) =>
-                            handleMaxRatingChange(
-                              question.id,
-                              event.target.value,
-                            )
-                          }
-                          className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                        >
-                          <option value="5">1 - 5</option>
-                          <option value="10">1 - 10</option>
-                        </select>
-                      </div>
-                    )}
-
-                    {/* ÇOKTAN SEÇMELİ */}
-
-                    {question.type === "multiple-choice" && (
-                      <div className="sm:col-span-2">
-                        <h4 className="font-stack-notch mb-2 text-lg font-bold text-amber-950">
-                          Seçenekler
-                        </h4>
-
-                        <div className="space-y-2">
-                          {question.options?.map((option, optionIndex) => (
-                            <div
-                              key={`${question.id}-option-${optionIndex}`}
-                              className="flex items-center gap-2"
-                            >
-                              <span className="w-5 text-center text-sm font-bold text-amber-700">
-                                {optionIndex + 1}.
-                              </span>
-
-                              <input
-                                type="text"
-                                value={option}
-                                onChange={(event) =>
-                                  handleOptionChange(
-                                    question.id,
-                                    optionIndex,
-                                    event.target.value,
-                                  )
-                                }
-                                placeholder="Seçenek..."
-                                className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 placeholder:text-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDeleteOption(question.id, optionIndex)
-                                }
-                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-900 font-bold text-amber-50 transition duration-200 hover:bg-amber-950"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                            <option value="yes-no">Evet / Hayır</option>
+                          </select>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleAddOption(question.id)}
-                          className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:border-amber-400 hover:bg-amber-100"
-                        >
-                          + Seçenek Ekle
-                        </button>
+                        <div>
+                          <span className="font-stack-notch mb-1 block text-lg font-bold text-amber-950">
+                            Zorunluluk
+                          </span>
+
+                          <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
+                            <input
+                              type="checkbox"
+                              checked={question.required}
+                              onChange={() => handleRequiredChange(question.id)}
+                              className="h-4 w-4 cursor-pointer accent-amber-700"
+                            />
+
+                            <span className="text-sm font-medium text-amber-950">
+                              Bu soru zorunlu
+                            </span>
+                          </label>
+                        </div>
+
+                        {/* PUANLAMA */}
+
+                        {question.type === "rating" && (
+                          <div className="sm:col-span-2">
+                            <label
+                              htmlFor={`max-rating-${question.id}`}
+                              className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
+                            >
+                              Maksimum puan
+                            </label>
+
+                            <select
+                              id={`max-rating-${question.id}`}
+                              value={question.maxRating || 10}
+                              onChange={(event) =>
+                                handleMaxRatingChange(
+                                  question.id,
+                                  event.target.value,
+                                )
+                              }
+                              className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                            >
+                              <option value="5">1 - 5</option>
+
+                              <option value="10">1 - 10</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* ÇOKTAN SEÇMELİ */}
+
+                        {question.type === "multiple-choice" && (
+                          <div className="sm:col-span-2">
+                            <h4 className="font-stack-notch mb-2 text-lg font-bold text-amber-950">
+                              Seçenekler
+                            </h4>
+
+                            <div className="space-y-2">
+                              {(question.options || []).map(
+                                (option, optionIndex) => (
+                                  <div
+                                    key={`${question.id}-option-${optionIndex}`}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="w-5 text-center text-sm font-bold text-amber-700">
+                                      {optionIndex + 1}.
+                                    </span>
+
+                                    <input
+                                      type="text"
+                                      value={option}
+                                      onChange={(event) =>
+                                        handleOptionChange(
+                                          question.id,
+                                          optionIndex,
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="Seçenek..."
+                                      className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 placeholder:text-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                    />
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteOption(
+                                          question.id,
+                                          optionIndex,
+                                        )
+                                      }
+                                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-900 font-bold text-amber-50 transition duration-200 hover:bg-amber-950"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleAddOption(question.id)}
+                              className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:border-amber-400 hover:bg-amber-100"
+                            >
+                              + Seçenek Ekle
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </SortableQuestion>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
 
             {/* YENİ SORU */}
 
@@ -427,6 +577,9 @@ function EditSurvey() {
               + Yeni Soru Ekle
             </button>
           </section>
+
+          {/* KAYDET */}
+
           <button
             type="submit"
             className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100"
