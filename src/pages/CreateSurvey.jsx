@@ -1,5 +1,88 @@
 import { useEffect, useState } from "react";
 
+import {
+  DndContext,
+  closestCenter,
+} from "@dnd-kit/core"; /* Drag&Drop yapmak için */
+
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
+/* SÜRÜKLENEBİLİR SORU KARTI */
+function SortableQuestion({ id, index, onDelete, children }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/70 p-5 shadow-md shadow-amber-100/50 ${
+        isDragging ? "relative z-10 opacity-70 shadow-xl" : ""
+      }`}
+    >
+      {/* SORU BAŞLIĞI + SÜRÜKLE + SİL */}
+
+      <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <label
+          htmlFor={`question-${id}`}
+          className="font-stack-notch text-lg font-bold text-amber-950"
+        >
+          {index + 1}. Soru
+        </label>
+
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          {...listeners}
+          aria-label="Soruyu sürükle"
+          className="flex touch-none cursor-grab select-none items-center gap-2 rounded-xl px-3 py-2 text-amber-900 transition duration-200 hover:bg-amber-100 active:cursor-grabbing"
+        >
+          <img
+            src="/dragicon.svg"
+            alt=""
+            draggable="false"
+            className="pointer-events-none h-7 w-7"
+          />
+
+          <span className="font-stack-notch pointer-events-none text-sm font-bold">
+            Soruyu Sürükle
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(id)}
+          className="justify-self-end rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
+        >
+          Soruyu Sil ×
+        </button>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
 function CreateSurvey() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -163,6 +246,27 @@ function CreateSurvey() {
     );
   }
 
+  // Kart bırakıldığında soruların yeni sırasını belirler.
+  function handleDragEnd(event) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    setQuestions((currentQuestions) => {
+      const oldIndex = currentQuestions.findIndex(
+        (question) => question.id === active.id,
+      );
+
+      const newIndex = currentQuestions.findIndex(
+        (question) => question.id === over.id,
+      );
+
+      return arrayMove(currentQuestions, oldIndex, newIndex);
+    });
+  }
+
   function handlePublish(event) {
     event.preventDefault();
 
@@ -281,179 +385,184 @@ function CreateSurvey() {
               </div>
             )}
 
-            <div className="space-y-4">
-              {questions.map((question, index) => (
-                <div
-                  key={question.id}
-                  className="rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/70 p-5 shadow-md shadow-amber-100/50"
-                >
-                  {/* SORU BAŞLIĞI + SİL */}
+            {/* DRAG & DROP */}
 
-                  <div className="mb-2 flex items-center justify-between">
-                    <label
-                      htmlFor={`question-${question.id}`}
-                      className="font-stack-notch text-lg font-bold text-amber-950"
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={questions.map((question) => question.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-5">
+                  {questions.map((question, index) => (
+                    <SortableQuestion
+                      key={question.id}
+                      id={question.id}
+                      index={index}
+                      onDelete={handleDeleteQuestion}
                     >
-                      {index + 1}. Soru
-                    </label>
+                      {/* SORU METNİ */}
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
-                    >
-                      Soruyu Sil ×
-                    </button>
-                  </div>
-
-                  {/* SORU METNİ */}
-
-                  <input
-                    id={`question-${question.id}`}
-                    type="text"
-                    value={question.text}
-                    onChange={(event) =>
-                      handleQuestionChange(question.id, event.target.value)
-                    }
-                    placeholder="Sorunuzu yazın..."
-                    className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                  />
-
-                  {/* TÜR + ZORUNLULUK */}
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor={`question-type-${question.id}`}
-                        className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
-                      >
-                        Soru türü
-                      </label>
-
-                      <select
-                        id={`question-type-${question.id}`}
-                        value={question.type}
+                      <input
+                        id={`question-${question.id}`}
+                        type="text"
+                        value={question.text}
                         onChange={(event) =>
-                          handleQuestionTypeChange(
-                            question.id,
-                            event.target.value,
-                          )
+                          handleQuestionChange(question.id, event.target.value)
                         }
-                        className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                      >
-                        <option value="text">Metin</option>
+                        placeholder="Sorunuzu yazın..."
+                        className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      />
 
-                        <option value="multiple-choice">Çoktan Seçmeli</option>
+                      {/* TÜR + ZORUNLULUK */}
 
-                        <option value="rating">Puanlama</option>
-
-                        <option value="yes-no">Evet / Hayır</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="font-stack-notch text-lg font-bold text-amber-950">
-                        Zorunluluk
-                      </span>
-
-                      <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
-                        <input
-                          type="checkbox"
-                          checked={question.required}
-                          onChange={() => handleRequiredChange(question.id)}
-                          className="h-4 w-4 cursor-pointer accent-amber-700"
-                        />
-
-                        <span className="text-sm font-medium text-amber-950">
-                          Bu soru zorunlu
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* PUANLAMA */}
-
-                  {question.type === "rating" && (
-                    <div className="mt-4">
-                      <label
-                        htmlFor={`max-rating-${question.id}`}
-                        className="font-stack-notch text-lg font-bold text-amber-950"
-                      >
-                        Maksimum puan
-                      </label>
-
-                      <select
-                        id={`max-rating-${question.id}`}
-                        value={question.maxRating || 10}
-                        onChange={(event) =>
-                          handleMaxRatingChange(question.id, event.target.value)
-                        }
-                        className="mt-1 h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-amber-950 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                      >
-                        <option value="5">1 - 5</option>
-
-                        <option value="10">1 - 10</option>
-                      </select>
-                    </div>
-                  )}
-
-                  {/* ÇOKTAN SEÇMELİ */}
-
-                  {question.type === "multiple-choice" && (
-                    <div className="mt-4">
-                      <h3 className="font-stack-notch text-lg font-bold text-amber-950">
-                        Seçenekler
-                      </h3>
-
-                      <div className="space-y-2">
-                        {(question.options || []).map((option, optionIndex) => (
-                          <div
-                            key={`${question.id}-option-${optionIndex}`}
-                            className="flex items-center gap-2"
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor={`question-type-${question.id}`}
+                            className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
                           >
-                            <span className="w-5 text-center text-sm font-bold text-amber-700">
-                              {optionIndex + 1}.
-                            </span>
+                            Soru türü
+                          </label>
 
+                          <select
+                            id={`question-type-${question.id}`}
+                            value={question.type}
+                            onChange={(event) =>
+                              handleQuestionTypeChange(
+                                question.id,
+                                event.target.value,
+                              )
+                            }
+                            className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          >
+                            <option value="text">Metin</option>
+
+                            <option value="multiple-choice">
+                              Çoktan Seçmeli
+                            </option>
+
+                            <option value="rating">Puanlama</option>
+
+                            <option value="yes-no">Evet / Hayır</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <span className="font-stack-notch text-lg font-bold text-amber-950">
+                            Zorunluluk
+                          </span>
+
+                          <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
                             <input
-                              type="text"
-                              value={option}
-                              onChange={(event) =>
-                                handleOptionChange(
-                                  question.id,
-                                  optionIndex,
-                                  event.target.value,
-                                )
-                              }
-                              placeholder="Seçenek..."
-                              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm text-amber-950 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                              type="checkbox"
+                              checked={question.required}
+                              onChange={() => handleRequiredChange(question.id)}
+                              className="h-4 w-4 cursor-pointer accent-amber-700"
                             />
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDeleteOption(question.id, optionIndex)
-                              }
-                              className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
+                            <span className="text-sm font-medium text-amber-950">
+                              Bu soru zorunlu
+                            </span>
+                          </label>
+                        </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleAddOption(question.id)}
-                        className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:bg-amber-100 hover:border-amber-400"
-                      >
-                        + Seçenek Ekle
-                      </button>
-                    </div>
-                  )}
+                      {/* PUANLAMA */}
+
+                      {question.type === "rating" && (
+                        <div className="mt-4">
+                          <label
+                            htmlFor={`max-rating-${question.id}`}
+                            className="font-stack-notch text-lg font-bold text-amber-950"
+                          >
+                            Maksimum puan
+                          </label>
+
+                          <select
+                            id={`max-rating-${question.id}`}
+                            value={question.maxRating || 10}
+                            onChange={(event) =>
+                              handleMaxRatingChange(
+                                question.id,
+                                event.target.value,
+                              )
+                            }
+                            className="mt-1 h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-amber-950 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          >
+                            <option value="5">1 - 5</option>
+
+                            <option value="10">1 - 10</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* ÇOKTAN SEÇMELİ */}
+
+                      {question.type === "multiple-choice" && (
+                        <div className="mt-4">
+                          <h3 className="font-stack-notch text-lg font-bold text-amber-950">
+                            Seçenekler
+                          </h3>
+
+                          <div className="space-y-2">
+                            {(question.options || []).map(
+                              (option, optionIndex) => (
+                                <div
+                                  key={`${question.id}-option-${optionIndex}`}
+                                  className="flex items-center gap-2"
+                                >
+                                  <span className="w-5 text-center text-sm font-bold text-amber-700">
+                                    {optionIndex + 1}.
+                                  </span>
+
+                                  <input
+                                    type="text"
+                                    value={option}
+                                    onChange={(event) =>
+                                      handleOptionChange(
+                                        question.id,
+                                        optionIndex,
+                                        event.target.value,
+                                      )
+                                    }
+                                    placeholder="Seçenek..."
+                                    className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm text-amber-950 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                  />
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteOption(
+                                        question.id,
+                                        optionIndex,
+                                      )
+                                    }
+                                    className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAddOption(question.id)}
+                            className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:border-amber-400 hover:bg-amber-100"
+                          >
+                            + Seçenek Ekle
+                          </button>
+                        </div>
+                      )}
+                    </SortableQuestion>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
 
             {/* YENİ SORU */}
 

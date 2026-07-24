@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="36px" height="36px" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="258.524" cy="346.376" r="124.976" id="gradient-0">
+      <stop offset="0" style="stop-color: rgb(151, 60, 0)"/>
+      <stop offset="1" style="stop-color: rgb(39.51% 12.118% 0%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="638.1" cy="1505.777" r="124.976" id="gradient-2">
+      <stop offset="0" style="stop-color: rgb(151, 60, 0)"/>
+      <stop offset="1" style="stop-color: rgb(39.51% 12.118% 0%)"/>
+    </radialGradient>
+  </defs>
+  <path d="M 513.124 1471.75 H 590.617 L 570.717 1403.695 L 763.076 1505.777 L 570.717 1607.859 L 590.617 1539.805 H 513.124 V 1471.75 Z" bx:shape="arrow 513.124 1403.695 249.952 204.164 68.055 192.359 19.9 1@a55cc071" style="stroke: rgba(151, 60, 0, 0); fill: url(&quot;#gradient-2&quot;);" transform="matrix(0, -1, 1, 0, -1255.776978, 763.075989)"/>
+  <path d="M 133.548 312.348 H 211.041 L 191.141 244.294 L 383.5 346.376 L 191.141 448.458 L 211.041 380.404 H 133.548 V 312.348 Z" bx:shape="arrow 133.548 244.294 249.952 204.164 68.055 192.359 19.9 1@fc145c7f" style="stroke-width: 1; transform-box: fill-box; transform-origin: 50% 50%; stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-0&quot;);" transform="matrix(0, 1, -1, 0, -8.524017, 28.64801)"/>
+</svg>
