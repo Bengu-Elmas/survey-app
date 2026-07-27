@@ -13,6 +13,18 @@ function SurveyCard({ survey, onShare, onDelete }) {
     return "bg-slate-100 text-slate-700";
   }
 
+  function getStatusIcon(status) {
+    if (status === "Yayında") {
+      return "/yayinda-logo.svg";
+    }
+
+    if (status === "Taslak") {
+      return "/taslak-logo.svg";
+    }
+
+    return null;
+  }
+
   return (
     <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
       {/* Başlık */}
@@ -28,11 +40,19 @@ function SurveyCard({ survey, onShare, onDelete }) {
         </div>
 
         <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClasses(
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold leading-none ${getStatusClasses(
             survey.status,
           )}`}
         >
-          {survey.status}
+          {getStatusIcon(survey.status) && (
+            <img
+              src={getStatusIcon(survey.status)}
+              alt=""
+              className="h-8 w-8 shrink-0"
+            />
+          )}
+
+          <span className="leading-none">{survey.status}</span>
         </span>
       </div>
 
