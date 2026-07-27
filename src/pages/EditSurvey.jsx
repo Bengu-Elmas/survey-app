@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { DndContext, closestCenter } from "@dnd-kit/core";
 
@@ -41,7 +41,6 @@ function SortableQuestion({ id, index, onDelete, children }) {
       }`}
     >
       {/* SORU BAŞLIĞI + SÜRÜKLE + SİL */}
-
       <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <label
           htmlFor={`question-${id}`}
@@ -85,6 +84,7 @@ function SortableQuestion({ id, index, onDelete, children }) {
 
 function EditSurvey() {
   const { surveyId } = useParams();
+  const navigate = useNavigate();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
 
@@ -313,6 +313,7 @@ function EditSurvey() {
     });
   }
 
+  // Taslak olarak kaydeder.
   async function handleSaveDraft() {
     const updatedSurvey = {
       ...selectedSurvey,
@@ -336,13 +337,21 @@ function EditSurvey() {
 
       console.log("Taslak olarak kaydedilen anket:", updatedSurvey);
 
-      setSaveMessage("Anket taslak olarak kaydedildi.");
+      setSaveMessage(
+        "Anket başarıyla taslak olarak kaydedildi. Ana sayfaya yönlendiriliyorsunuz...",
+      );
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       console.error("Taslak kaydedilirken hata oluştu:", error);
 
       setSaveMessage("Taslak kaydedilirken bir hata oluştu.");
     }
   }
+
+  // Değişiklikleri kaydeder.
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -350,6 +359,7 @@ function EditSurvey() {
       ...selectedSurvey,
       title,
       description,
+      status: "Yayında",
       questionCount: questions.length,
       questions,
     };
@@ -358,19 +368,27 @@ function EditSurvey() {
       await updateDoc(doc(db, "surveys", surveyId), {
         title,
         description,
+        status: "Yayında",
         questionCount: questions.length,
         questions,
       });
 
       console.log("Güncellenen anket:", updatedSurvey);
 
-      setSaveMessage("Değişiklikler kaydedildi.");
+      setSaveMessage(
+        "Değişiklikler başarıyla kaydedildi. Ana sayfaya yönlendiriliyorsunuz...",
+      );
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       console.error("Anket güncellenirken hata oluştu:", error);
 
       setSaveMessage("Anket güncellenirken bir hata oluştu.");
     }
   }
+
   if (!selectedSurvey) {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
@@ -409,7 +427,6 @@ function EditSurvey() {
           className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
         >
           {/* BAŞLIK */}
-
           <div>
             <label
               htmlFor="survey-title"
@@ -428,7 +445,6 @@ function EditSurvey() {
           </div>
 
           {/* AÇIKLAMA */}
-
           <div>
             <label
               htmlFor="survey-description"
@@ -447,14 +463,12 @@ function EditSurvey() {
           </div>
 
           {/* SORULAR */}
-
           <section>
             <h2 className="font-stack-notch mb-4 text-xl font-bold text-amber-950">
               Anket Soruları
             </h2>
 
             {/* DRAG & DROP */}
-
             <DndContext
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
@@ -472,7 +486,6 @@ function EditSurvey() {
                       onDelete={handleDeleteQuestion}
                     >
                       {/* SORU METNİ */}
-
                       <input
                         id={`question-${question.id}`}
                         type="text"
@@ -485,7 +498,6 @@ function EditSurvey() {
                       />
 
                       {/* SORU TÜRÜ + ZORUNLULUK */}
-
                       <div className="mt-5 grid gap-4 sm:grid-cols-2">
                         <div>
                           <label
@@ -538,7 +550,6 @@ function EditSurvey() {
                         </div>
 
                         {/* PUANLAMA */}
-
                         {question.type === "rating" && (
                           <div className="sm:col-span-2">
                             <label
@@ -560,14 +571,12 @@ function EditSurvey() {
                               className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                             >
                               <option value="5">1 - 5</option>
-
                               <option value="10">1 - 10</option>
                             </select>
                           </div>
                         )}
 
                         {/* ÇOKTAN SEÇMELİ */}
-
                         {question.type === "multiple-choice" && (
                           <div className="sm:col-span-2">
                             <h4 className="font-stack-notch mb-2 text-lg font-bold text-amber-950">
@@ -633,7 +642,6 @@ function EditSurvey() {
             </DndContext>
 
             {/* YENİ SORU */}
-
             <button
               type="button"
               onClick={handleAddQuestion}
@@ -644,7 +652,6 @@ function EditSurvey() {
           </section>
 
           {/* KAYDET */}
-
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
@@ -664,7 +671,13 @@ function EditSurvey() {
         </form>
 
         {saveMessage && (
-          <p className="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm font-semibold text-green-700">
+          <p
+            className={`mt-4 rounded-lg px-4 py-3 text-sm font-semibold ${
+              saveMessage.includes("başarıyla")
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
             {saveMessage}
           </p>
         )}

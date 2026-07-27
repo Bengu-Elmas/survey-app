@@ -33,6 +33,9 @@ function Results() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Hangi katılımcının cevapları açık?
+  const [expandedResponseId, setExpandedResponseId] = useState(null);
+
   useEffect(() => {
     async function fetchResults() {
       try {
@@ -173,11 +176,7 @@ function Results() {
       questions.forEach((question) => {
         const answer = response.answers?.[question.id];
 
-        if (
-          answer !== undefined &&
-          answer !== null &&
-          (typeof answer !== "string" || answer.trim() !== "")
-        ) {
+        if (isAnswerFilled(answer)) {
           answeredQuestions += 1;
         }
       });
@@ -211,9 +210,63 @@ function Results() {
   }
 
   function getInitials(participant) {
-    return `${participant?.firstName?.[0] || ""}${
+    const initials = `${participant?.firstName?.[0] || ""}${
       participant?.lastName?.[0] || ""
     }`;
+
+    return initials || "?";
+  }
+
+  function isAnswerFilled(answer) {
+    if (answer === undefined || answer === null) {
+      return false;
+    }
+
+    if (typeof answer === "string") {
+      return answer.trim() !== "";
+    }
+
+    if (typeof answer === "object") {
+      return answer.value !== undefined && answer.value !== "";
+    }
+
+    return true;
+  }
+
+  function getAnsweredQuestionCount(response) {
+    const questions = selectedSurvey?.questions || [];
+
+    return questions.reduce((count, question) => {
+      const answer = response.answers?.[question.id];
+
+      return isAnswerFilled(answer) ? count + 1 : count;
+    }, 0);
+  }
+
+  function formatAnswer(question, answer) {
+    if (!isAnswerFilled(answer)) {
+      return "Yanıt verilmedi";
+    }
+
+    if (
+      question.type === "multiple-choice" &&
+      typeof answer === "object" &&
+      answer !== null
+    ) {
+      return answer.value || "Yanıt verilmedi";
+    }
+
+    if (question.type === "rating") {
+      return `${answer} / ${question.maxRating || 10}`;
+    }
+
+    return String(answer);
+  }
+
+  function toggleParticipantAnswers(responseId) {
+    setExpandedResponseId((currentId) =>
+      currentId === responseId ? null : responseId,
+    );
   }
 
   function formatDate(date) {
@@ -223,7 +276,6 @@ function Results() {
 
     let convertedDate;
 
-    // Firestore Timestamp ise:
     if (typeof date.toDate === "function") {
       convertedDate = date.toDate();
     } else if (date.seconds) {
@@ -285,7 +337,6 @@ function Results() {
       ...rows.map((row) => row.map(escapeCSVValue).join(",")),
     ].join("\n");
 
-    // Türkçe karakterlerin Excel'de düzgün görünmesi için BOM.
     const blob = new Blob(["\uFEFF" + csvContent], {
       type: "text/csv;charset=utf-8;",
     });
@@ -420,7 +471,7 @@ function Results() {
               {selectedSurvey.title}
             </h1>
 
-            <p className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
               {selectedSurvey.description}
             </p>
           </div>
@@ -618,14 +669,39 @@ function Results() {
                             textAnswers.map((response) => (
                               <div
                                 key={response.id}
-                                className="rounded-xl bg-slate-50 p-4"
+                                className="rounded-2xl border border-amber-200 bg-white/80 p-4 shadow-sm"
                               >
-                                <p className="text-sm leading-6 text-slate-700">
-                                  {response.answers?.[question.id]}
-                                </p>
+                                <div className="flex items-center gap-3">
+                                  {response.participant?.avatar ? (
+                                    <img
+                                      src={response.participant.avatar}
+                                      alt={
+                                        response.participant?.fullName ||
+                                        "Katılımcı"
+                                      }
+                                      className="h-9 w-9 rounded-full object-cover ring-2 ring-amber-200"
+                                    />
+                                  ) : (
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-xs font-bold text-amber-950">
+                                      {getInitials(response.participant)}
+                                    </div>
+                                  )}
 
-                                <p className="mt-2 text-xs font-medium text-slate-500">
-                                  {response.participant?.fullName}
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-bold text-amber-950">
+                                      {response.participant?.fullName ||
+                                        "İsimsiz Katılımcı"}
+                                    </p>
+
+                                    <p className="text-xs font-medium text-amber-700">
+                                      {response.participant?.city ||
+                                        "Şehir bilgisi yok"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                                  {response.answers?.[question.id]}
                                 </p>
                               </div>
                             ))
@@ -874,58 +950,167 @@ function Results() {
               </div>
             </section>
 
-            {/* YANIT VERENLER */}
+            {/* KATILIMCI YANITLARI */}
 
-            <section className="mt-10 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 shadow-lg shadow-amber-200/40">
-              <div className="flex items-center justify-between border-b border-amber-200 px-6 py-5">
+            <section className="mt-10">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h1 className="font-stack-notch text-4xl font-bold text-amber-950">
-                    Yanıt Verenler
-                  </h1>
+                  <p className="font-stack-notch text-sm font-semibold text-amber-700">
+                    KATILIMCILAR
+                  </p>
 
-                  <p className="mt-1 text-sm font-semibold text-amber-800">
-                    Ankete katılan kullanıcılar
+                  <h2 className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
+                    Katılımcı Yanıtları
+                  </h2>
+
+                  <p className="mt-2 text-sm font-medium text-slate-600">
+                    Ankete katılan kişileri ve verdikleri cevapları inceleyin.
                   </p>
                 </div>
 
-                <span className="rounded-full bg-amber-200 px-4 py-1.5 text-sm font-bold text-amber-950">
-                  {responses.length} kişi
+                <span className="w-fit rounded-full bg-amber-200 px-4 py-2 text-sm font-bold text-amber-950">
+                  {responses.length} katılımcı
                 </span>
               </div>
 
-              <div className="respondents-scrollbar max-h-96 overflow-y-auto">
-                {responses.map((response) => (
-                  <div
-                    key={response.id}
-                    className="flex items-center gap-4 border-b border-amber-200/70 px-6 py-4 transition duration-200 last:border-b-0 hover:bg-amber-100/70"
-                  >
-                    {response.participant?.avatar ? (
-                      <img
-                        src={response.participant.avatar}
-                        alt={response.participant.fullName}
-                        className="h-11 w-11 rounded-full object-cover ring-2 ring-amber-300"
-                      />
-                    ) : (
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-950 ring-2 ring-amber-300">
-                        {getInitials(response.participant)}
+              <div className="space-y-4">
+                {responses.map((response, responseIndex) => {
+                  const isExpanded = expandedResponseId === response.id;
+
+                  const answeredQuestionCount =
+                    getAnsweredQuestionCount(response);
+
+                  return (
+                    <article
+                      key={response.id}
+                      className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 shadow-lg shadow-amber-200/30"
+                    >
+                      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+                        {/* PROFİL */}
+
+                        {response.participant?.avatar ? (
+                          <img
+                            src={response.participant.avatar}
+                            alt={response.participant?.fullName || "Katılımcı"}
+                            className="h-14 w-14 shrink-0 rounded-full object-cover ring-4 ring-amber-200"
+                          />
+                        ) : (
+                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-200 text-base font-bold text-amber-950 ring-4 ring-amber-100">
+                            {getInitials(response.participant)}
+                          </div>
+                        )}
+
+                        {/* KİŞİ BİLGİLERİ */}
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-lg font-bold text-amber-950">
+                              {response.participant?.fullName ||
+                                "İsimsiz Katılımcı"}
+                            </h3>
+
+                            <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-amber-700 shadow-sm">
+                              Katılımcı #{responseIndex + 1}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium text-amber-800">
+                            <span>
+                              📍{" "}
+                              {response.participant?.city ||
+                                "Şehir bilgisi yok"}
+                            </span>
+
+                            <span>🕒 {formatDate(response.submittedAt)}</span>
+                          </div>
+                        </div>
+
+                        {/* TAMAMLANMA + BUTON */}
+
+                        <div className="flex shrink-0 items-center gap-3">
+                          <div className="rounded-xl bg-white px-4 py-2 text-center shadow-sm">
+                            <p className="text-xs font-semibold text-amber-700">
+                              Yanıtlanan
+                            </p>
+
+                            <p className="font-stack-notch mt-0.5 font-bold text-amber-950">
+                              {answeredQuestionCount}/
+                              {selectedSurvey.questions?.length || 0}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleParticipantAnswers(response.id)
+                            }
+                            className="rounded-xl bg-amber-800 px-4 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:scale-105 hover:bg-amber-900"
+                          >
+                            {isExpanded ? "Yanıtları Gizle" : "Yanıtları Gör"}
+                          </button>
+                        </div>
                       </div>
-                    )}
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-bold text-amber-950">
-                        {response.participant?.fullName || "İsimsiz Katılımcı"}
-                      </p>
+                      {/* KİŞİNİN TÜM CEVAPLARI */}
 
-                      <p className="mt-1 text-sm font-medium text-amber-800">
-                        📍 {response.participant?.city || "Şehir bilgisi yok"}
-                      </p>
-                    </div>
+                      {isExpanded && (
+                        <div className="border-t border-amber-200 bg-white/70 p-5">
+                          <div className="mb-4">
+                            <p className="font-stack-notch text-lg font-bold text-amber-950">
+                              Verilen Yanıtlar
+                            </p>
 
-                    <p className="shrink-0 text-sm font-semibold text-amber-800">
-                      {formatDate(response.submittedAt)}
-                    </p>
-                  </div>
-                ))}
+                            <p className="mt-1 text-sm text-slate-600">
+                              Bu katılımcının anketteki sorulara verdiği
+                              cevaplar.
+                            </p>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2">
+                            {(selectedSurvey.questions || []).map(
+                              (question, questionIndex) => {
+                                const answer = response.answers?.[question.id];
+
+                                const hasAnswer = isAnswerFilled(answer);
+
+                                return (
+                                  <div
+                                    key={question.id}
+                                    className="rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50 p-4 shadow-sm"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
+                                        Soru {questionIndex + 1}
+                                      </p>
+
+                                      <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                                        {getQuestionTypeName(question.type)}
+                                      </span>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-bold leading-6 text-slate-800">
+                                      {question.text}
+                                    </p>
+
+                                    <div
+                                      className={`mt-3 rounded-xl px-4 py-3 text-sm font-semibold leading-6 ${
+                                        hasAnswer
+                                          ? "bg-amber-100 text-amber-950"
+                                          : "bg-slate-100 text-slate-500"
+                                      }`}
+                                    >
+                                      {formatAnswer(question, answer)}
+                                    </div>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             </section>
           </>
