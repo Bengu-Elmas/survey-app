@@ -1,14 +1,40 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import surveys from "../data/surveys.js";
+
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase.js";
 
 function ThankYou() {
   const { surveyId } = useParams();
 
-  const selectedSurvey = surveys.find((survey) => survey.id === surveyId);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
 
   const [isVisible, setIsVisible] = useState(false);
   const [showCheck, setShowCheck] = useState(false);
+
+  /* ANKETİ FIREBASE'DEN AL */
+
+  useEffect(() => {
+    async function fetchSurvey() {
+      try {
+        const surveyRef = doc(db, "surveys", surveyId);
+        const surveySnapshot = await getDoc(surveyRef);
+
+        if (surveySnapshot.exists()) {
+          setSelectedSurvey({
+            id: surveySnapshot.id,
+            ...surveySnapshot.data(),
+          });
+        }
+      } catch (error) {
+        console.error("Tamamlanan anket bilgisi alınırken hata oluştu:", error);
+      }
+    }
+
+    fetchSurvey();
+  }, [surveyId]);
+
+  /* SAYFA ANİMASYONU */
 
   useEffect(() => {
     const cardTimer = setTimeout(() => {

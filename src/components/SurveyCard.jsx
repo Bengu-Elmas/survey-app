@@ -27,7 +27,8 @@ function SurveyCard({ survey, onShare, onDelete }) {
 
   return (
     <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
-      {/* Başlık */}
+      {/* BAŞLIK */}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-stack-notch text-lg font-bold text-amber-950">
@@ -56,34 +57,36 @@ function SurveyCard({ survey, onShare, onDelete }) {
         </span>
       </div>
 
-      {/* İstatistikler */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-3">
-          <p className="text-xs font-semibold text-amber-800">Soru Sayısı</p>
+      {/* İSTATİSTİKLER */}
 
-          <p className="mt-1 text-lg font-bold text-amber-950">
-            {survey.questions.length}
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div>
+          <p className="text-lg font-bold text-amber-950">
+            {survey.questionCount ?? 0}
           </p>
+
+          <p className="text-s font-bold text-amber-800">Soru</p>
         </div>
 
-        <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-3">
-          <p className="text-xs font-semibold text-amber-800">Yanıt Sayısı</p>
-
-          <p className="mt-1 text-lg font-bold text-amber-950">
-            {survey.responseCount}
+        <div>
+          <p className="text-lg font-bold text-amber-950">
+            {survey.responseCount ?? 0}
           </p>
+
+          <p className="text-s font-bold text-amber-800">Yanıt</p>
         </div>
 
-        <div className="col-span-2 rounded-xl border border-amber-100 bg-amber-50/80 p-3 sm:col-span-1">
-          <p className="text-xs font-semibold text-amber-800">Tamamlanma</p>
-
-          <p className="mt-1 text-lg font-bold text-amber-950">
-            %{survey.completionRate}
+        <div>
+          <p className="text-lg font-bold text-amber-950">
+            %{survey.completionRate ?? 0}
           </p>
+
+          <p className="text-s font-bold text-amber-800">Tamamlama</p>
         </div>
       </div>
 
-      {/* Butonlar */}
+      {/* BUTONLAR */}
+
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           to={`/edit/${survey.id}`}
@@ -117,6 +120,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
             <circle cx="18" cy="5" r="3" />
             <circle cx="6" cy="12" r="3" />
             <circle cx="18" cy="19" r="3" />
+
             <path d="M8.6 10.7 15.4 6.3" />
             <path d="m8.6 13.3 6.8 4.4" />
           </svg>

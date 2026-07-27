@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import surveys from "../data/surveys.js";
+
+import {
+  collection,
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+} from "firebase/firestore";
+
+import { db } from "../firebase.js";
 
 function SurveyFill() {
   const { surveyId } = useParams();
   const navigate = useNavigate();
 
-  const selectedSurvey = surveys.find((survey) => survey.id === surveyId);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [surveyLoading, setSurveyLoading] = useState(true);
 
   const questions = selectedSurvey?.questions || [];
 
+  const [selectedOptions, setSelectedOptions] = useState({});
   const [answers, setAnswers] = useState({});
   const [errors, setErrors] = useState({});
 
@@ -18,11 +29,46 @@ function SurveyFill() {
   const [userError, setUserError] = useState("");
 
   const [userRequest, setUserRequest] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* ANKETİ FIREBASE'DEN AL */
+
+  useEffect(() => {
+    async function fetchSurvey() {
+      try {
+        setSurveyLoading(true);
+
+        const surveyRef = doc(db, "surveys", surveyId);
+        const surveySnapshot = await getDoc(surveyRef);
+
+        if (surveySnapshot.exists()) {
+          setSelectedSurvey({
+            id: surveySnapshot.id,
+            ...surveySnapshot.data(),
+          });
+        } else {
+          setSelectedSurvey(null);
+        }
+      } catch (error) {
+        console.error("Anket alınırken hata oluştu:", error);
+        setSelectedSurvey(null);
+      } finally {
+        setSurveyLoading(false);
+      }
+    }
+
+    fetchSurvey();
+  }, [surveyId]);
+
+  /* ANKET DEĞİŞİNCE CEVAPLARI TEMİZLE */
 
   useEffect(() => {
     setAnswers({});
     setErrors({});
+    setSelectedOptions({});
   }, [surveyId]);
+
+  /* RANDOM USER */
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,6 +116,8 @@ function SurveyFill() {
     };
   }, [surveyId, userRequest]);
 
+  /* CEVAP KONTROLÜ */
+
   function isAnswered(question, answer) {
     if (question.type === "text") {
       return typeof answer === "string" && answer.trim() !== "";
@@ -90,6 +138,8 @@ function SurveyFill() {
     }));
   }
 
+  /* İLERLEME ORANI */
+
   const answeredQuestionCount = questions.filter((question) =>
     isAnswered(question, answers[question.id]),
   ).length;
@@ -99,8 +149,19 @@ function SurveyFill() {
       ? Math.round((answeredQuestionCount / questions.length) * 100)
       : 0;
 
-  function handleSubmit(event) {
+  /* ANKETİ GÖNDER */
+
+  async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!selectedSurvey || selectedSurvey.status !== "Yayında") {
+      console.error("Taslak durumundaki ankete yanıt gönderilemez.");
+      return;
+    }
+
+    if (isSubmitting) {
+      return;
+    }
 
     const newErrors = {};
 
@@ -137,6 +198,27 @@ function SurveyFill() {
       return;
     }
 
+    if (!selectedSurvey || questions.length === 0) {
+      return;
+    }
+
+    /*
+      Bu katılımcının anketi yüzde kaç
+      tamamladığını hesaplıyoruz.
+    */
+
+    const currentAnsweredQuestionCount = questions.filter((question) =>
+      isAnswered(question, answers[question.id]),
+    ).length;
+
+    const currentResponseCompletion = Math.round(
+      (currentAnsweredQuestionCount / questions.length) * 100,
+    );
+
+    /*
+      Firestore'a kaydedilecek response.
+    */
+
     const surveyResponse = {
       surveyId: selectedSurvey.id,
 
@@ -150,12 +232,94 @@ function SurveyFill() {
 
       answers,
 
-      submittedAt: new Date().toISOString(),
+      submittedAt: serverTimestamp(),
     };
 
-    console.log("Gönderilen anket yanıtı:", surveyResponse);
+    const surveyRef = doc(db, "surveys", surveyId);
 
-    navigate(`/thank-you/${surveyId}`);
+    /*
+      addDoc yerine burada ID'yi önceden
+      oluşturuyoruz çünkü response ve survey
+      güncellemesini aynı transaction içinde
+      yapacağız.
+    */
+
+    const responseRef = doc(collection(db, "responses"));
+
+    try {
+      setIsSubmitting(true);
+
+      await runTransaction(db, async (transaction) => {
+        /*
+          Firestore'daki anketin EN GÜNCEL
+          halini transaction içinde okuyoruz.
+        */
+
+        const latestSurveySnapshot = await transaction.get(surveyRef);
+
+        if (!latestSurveySnapshot.exists()) {
+          throw new Error("Anket bulunamadı.");
+        }
+
+        const latestSurveyData = latestSurveySnapshot.data();
+
+        const currentResponseCount =
+          Number(latestSurveyData.responseCount) || 0;
+
+        const currentCompletionRate =
+          Number(latestSurveyData.completionRate) || 0;
+
+        const newResponseCount = currentResponseCount + 1;
+
+        /*
+          Önceki tamamlanma ortalaması ile
+          yeni katılımcının oranını birleştiriyoruz.
+        */
+
+        const newCompletionRate = Math.round(
+          (currentCompletionRate * currentResponseCount +
+            currentResponseCompletion) /
+            newResponseCount,
+        );
+
+        /*
+          RESPONSE KAYDI
+        */
+
+        transaction.set(responseRef, surveyResponse);
+
+        /*
+          SURVEY İSTATİSTİKLERİNİ GÜNCELLE
+        */
+
+        transaction.update(surveyRef, {
+          responseCount: newResponseCount,
+          completionRate: newCompletionRate,
+        });
+      });
+
+      console.log("Anket yanıtı Firebase'e kaydedildi:", responseRef.id);
+
+      console.log("Tamamlanma oranı:", currentResponseCompletion);
+
+      navigate(`/thank-you/${surveyId}`);
+    } catch (error) {
+      console.error("Anket yanıtı kaydedilirken hata oluştu:", error);
+
+      setIsSubmitting(false);
+    }
+  }
+
+  /* YÜKLENİYOR */
+
+  if (surveyLoading) {
+    return (
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-2xl rounded-xl bg-white p-6 shadow-sm">
+          <p className="text-slate-700">Anket yükleniyor...</p>
+        </div>
+      </main>
+    );
   }
 
   /* ANKET BULUNAMADI */
@@ -181,6 +345,28 @@ function SurveyFill() {
     );
   }
 
+  /* TASLAK ANKET */
+
+  if (selectedSurvey.status !== "Yayında") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <p className="text-sm font-bold tracking-[0.2em] text-amber-700">
+            ANKET HENÜZ YAYINDA DEĞİL
+          </p>
+
+          <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
+            Bu anket şu anda taslak durumda
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
+            Bu ankete şu anda yanıt verilemiyor. Anket yayınlandığında
+            katılımcılar yanıt gönderebilir.
+          </p>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-2xl">
@@ -368,7 +554,7 @@ function SurveyFill() {
                       <label
                         key={`${question.id}-${optionIndex}`}
                         className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition duration-200 ${
-                          answer === option
+                          selectedOptions[question.id] === optionIndex
                             ? "border-amber-600 bg-amber-100 shadow-sm"
                             : "border-amber-200 bg-white hover:border-amber-400 hover:bg-amber-50"
                         }`}
@@ -377,10 +563,18 @@ function SurveyFill() {
                           type="radio"
                           name={question.id}
                           value={option}
-                          checked={answer === option}
-                          onChange={() =>
-                            handleAnswerChange(question.id, option)
-                          }
+                          checked={selectedOptions[question.id] === optionIndex}
+                          onChange={() => {
+                            setSelectedOptions((previousOptions) => ({
+                              ...previousOptions,
+                              [question.id]: optionIndex,
+                            }));
+
+                            handleAnswerChange(question.id, {
+                              optionIndex,
+                              value: option,
+                            });
+                          }}
                           className="h-4 w-4 accent-amber-700"
                         />
 
@@ -421,10 +615,10 @@ function SurveyFill() {
 
           <button
             type="submit"
-            disabled={userLoading || !participant}
+            disabled={userLoading || !participant || isSubmitting}
             className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100"
           >
-            Anketi Gönder
+            {isSubmitting ? "Gönderiliyor..." : "Anketi Gönder"}
           </button>
         </form>
       </div>

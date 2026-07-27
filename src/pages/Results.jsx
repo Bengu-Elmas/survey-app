@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import {
@@ -13,15 +14,334 @@ import {
   YAxis,
 } from "recharts";
 
-import surveys from "../data/surveys.js";
-import mockResponses from "../data/mockResponses.js";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+
+import { db } from "../firebase.js";
 
 function Results() {
   const { surveyId } = useParams();
 
-  const selectedSurvey = surveys.find((survey) => survey.id === surveyId);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [responses, setResponses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const responses = mockResponses[surveyId] || [];
+  useEffect(() => {
+    async function fetchResults() {
+      try {
+        setLoading(true);
+        setErrorMessage("");
+
+        // Önce ilgili anketi Firestore'dan alıyoruz.
+        const surveyRef = doc(db, "surveys", surveyId);
+        const surveySnapshot = await getDoc(surveyRef);
+
+        if (!surveySnapshot.exists()) {
+          setSelectedSurvey(null);
+          setResponses([]);
+          return;
+        }
+
+        const surveyData = {
+          id: surveySnapshot.id,
+          ...surveySnapshot.data(),
+        };
+
+        setSelectedSurvey(surveyData);
+
+        // Sadece bu ankete ait yanıtları getiriyoruz.
+        const responsesQuery = query(
+          collection(db, "responses"),
+          where("surveyId", "==", surveyId),
+        );
+
+        const responsesSnapshot = await getDocs(responsesQuery);
+
+        const responseList = responsesSnapshot.docs.map((responseDoc) => ({
+          id: responseDoc.id,
+          ...responseDoc.data(),
+        }));
+
+        setResponses(responseList);
+      } catch (error) {
+        console.error("Anket sonuçları alınırken hata oluştu:", error);
+
+        setErrorMessage(
+          "Anket sonuçları alınırken bir hata oluştu. Lütfen tekrar deneyin.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchResults();
+  }, [surveyId]);
+
+  function getQuestionData(question) {
+    if (question.type === "rating") {
+      const maxRating = question.maxRating || 10;
+
+      return Array.from({ length: maxRating }, (_, index) => {
+        const rating = index + 1;
+
+        const count = responses.filter(
+          (response) => Number(response.answers?.[question.id]) === rating,
+        ).length;
+
+        return {
+          name: rating.toString(),
+          count,
+        };
+      });
+    }
+
+    if (question.type === "yes-no") {
+      return ["Evet", "Hayır"].map((answer) => ({
+        name: answer,
+
+        count: responses.filter(
+          (response) => response.answers?.[question.id] === answer,
+        ).length,
+      }));
+    }
+
+    if (question.type === "multiple-choice") {
+      return (question.options || []).map((option, optionIndex) => ({
+        name: option,
+
+        count: responses.filter(
+          (response) =>
+            response.answers?.[question.id]?.optionIndex === optionIndex,
+        ).length,
+      }));
+    }
+
+    return [];
+  }
+
+  function calculateAverageRating() {
+    const ratingQuestions = (selectedSurvey?.questions || []).filter(
+      (question) => question.type === "rating",
+    );
+
+    const ratings = [];
+
+    responses.forEach((response) => {
+      ratingQuestions.forEach((question) => {
+        const answer = response.answers?.[question.id];
+
+        if (answer === undefined || answer === null || answer === "") {
+          return;
+        }
+
+        const numericAnswer = Number(answer);
+
+        if (!Number.isNaN(numericAnswer)) {
+          ratings.push(numericAnswer);
+        }
+      });
+    });
+
+    if (ratings.length === 0) {
+      return 0;
+    }
+
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+
+    return (total / ratings.length).toFixed(1);
+  }
+
+  function calculateCompletionRate() {
+    const questions = selectedSurvey?.questions || [];
+
+    if (responses.length === 0 || questions.length === 0) {
+      return 0;
+    }
+
+    let answeredQuestions = 0;
+
+    const totalQuestions = responses.length * questions.length;
+
+    responses.forEach((response) => {
+      questions.forEach((question) => {
+        const answer = response.answers?.[question.id];
+
+        if (
+          answer !== undefined &&
+          answer !== null &&
+          (typeof answer !== "string" || answer.trim() !== "")
+        ) {
+          answeredQuestions += 1;
+        }
+      });
+    });
+
+    return Math.round((answeredQuestions / totalQuestions) * 100);
+  }
+
+  function getTextAnswers(question) {
+    return responses.filter((response) => {
+      const answer = response.answers?.[question.id];
+
+      return typeof answer === "string" && answer.trim() !== "";
+    });
+  }
+
+  function getQuestionTypeName(type) {
+    if (type === "rating") {
+      return "Puanlama";
+    }
+
+    if (type === "yes-no") {
+      return "Evet / Hayır";
+    }
+
+    if (type === "multiple-choice") {
+      return "Çoktan Seçmeli";
+    }
+
+    return "Metin";
+  }
+
+  function getInitials(participant) {
+    return `${participant?.firstName?.[0] || ""}${
+      participant?.lastName?.[0] || ""
+    }`;
+  }
+
+  function formatDate(date) {
+    if (!date) {
+      return "Tarih bulunamadı";
+    }
+
+    let convertedDate;
+
+    // Firestore Timestamp ise:
+    if (typeof date.toDate === "function") {
+      convertedDate = date.toDate();
+    } else if (date.seconds) {
+      convertedDate = new Date(date.seconds * 1000);
+    } else {
+      convertedDate = new Date(date);
+    }
+
+    if (Number.isNaN(convertedDate.getTime())) {
+      return "Tarih bulunamadı";
+    }
+
+    return convertedDate.toLocaleString("tr-TR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  }
+
+  function handleDownloadCSV() {
+    if (responses.length === 0 || !selectedSurvey) {
+      return;
+    }
+
+    const headers = [
+      "Ad Soyad",
+      "Şehir",
+      "Gönderim Tarihi",
+      ...selectedSurvey.questions.map((question) => question.text),
+    ];
+
+    const rows = responses.map((response) => [
+      response.participant?.fullName || "",
+      response.participant?.city || "",
+      formatDate(response.submittedAt),
+
+      ...selectedSurvey.questions.map((question) => {
+        const answer = response.answers?.[question.id];
+
+        if (
+          question.type === "multiple-choice" &&
+          typeof answer === "object" &&
+          answer !== null
+        ) {
+          return answer.value;
+        }
+
+        return answer ?? "";
+      }),
+    ]);
+
+    const escapeCSVValue = (value) => {
+      const stringValue = String(value);
+
+      return `"${stringValue.replaceAll('"', '""')}"`;
+    };
+
+    const csvContent = [
+      headers.map(escapeCSVValue).join(","),
+      ...rows.map((row) => row.map(escapeCSVValue).join(",")),
+    ].join("\n");
+
+    // Türkçe karakterlerin Excel'de düzgün görünmesi için BOM.
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${selectedSurvey.title}-yanitlar.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <p className="font-stack-notch text-2xl font-bold text-amber-950">
+            Sonuçlar yükleniyor...
+          </p>
+
+          <p className="mt-3 text-sm font-medium text-amber-800">
+            Anket ve yanıt bilgileri Firebase&apos;den alınıyor.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <main className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-red-200 bg-white px-10 py-20 text-center shadow-xl">
+          <h1 className="font-stack-notch text-3xl font-bold text-red-800">
+            Bir Hata Oluştu
+          </h1>
+
+          <p className="mt-4 text-slate-700">{errorMessage}</p>
+
+          <Link
+            to="/"
+            className="mt-8 inline-flex items-center rounded-xl bg-amber-800 px-6 py-3 text-sm font-semibold text-white transition duration-300 hover:scale-105 hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   if (!selectedSurvey) {
     return (
@@ -51,166 +371,39 @@ function Results() {
     );
   }
 
-  function getQuestionData(question) {
-    if (question.type === "rating") {
-      const maxRating = question.maxRating || 10;
+  /* TASLAK ANKET */
 
-      return Array.from({ length: maxRating }, (_, index) => {
-        const rating = index + 1;
+  if (selectedSurvey.status !== "Yayında") {
+    return (
+      <main className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <p className="text-sm font-bold tracking-[0.2em] text-amber-700">
+            SONUÇLAR GÖRÜNTÜLENEMİYOR
+          </p>
 
-        const count = responses.filter(
-          (response) => Number(response.answers[question.id]) === rating,
-        ).length;
+          <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
+            Bu anket henüz yayınlanmadı
+          </h1>
 
-        return {
-          name: rating.toString(),
-          count,
-        };
-      });
-    }
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
+            Taslak durumundaki anketlerin sonuçları görüntülenemez. Anket
+            yayınlandıktan ve katılımcılardan yanıt almaya başladıktan sonra
+            sonuçlara buradan ulaşabilirsiniz.
+          </p>
 
-    if (question.type === "yes-no") {
-      return ["Evet", "Hayır"].map((answer) => ({
-        name: answer,
-
-        count: responses.filter(
-          (response) => response.answers[question.id] === answer,
-        ).length,
-      }));
-    }
-
-    if (question.type === "multiple-choice") {
-      return (question.options || []).map((option) => ({
-        name: option,
-
-        count: responses.filter(
-          (response) => response.answers[question.id] === option,
-        ).length,
-      }));
-    }
-
-    return [];
-  }
-
-  function calculateAverageRating() {
-    const ratingQuestions = selectedSurvey.questions.filter(
-      (question) => question.type === "rating",
+          <Link
+            to="/"
+            className="mt-8 inline-flex items-center rounded-xl bg-amber-800 px-6 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:scale-105 hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </Link>
+        </div>
+      </main>
     );
-
-    const ratings = [];
-
-    responses.forEach((response) => {
-      ratingQuestions.forEach((question) => {
-        const answer = Number(response.answers[question.id]);
-
-        if (!Number.isNaN(answer)) {
-          ratings.push(answer);
-        }
-      });
-    });
-
-    if (ratings.length === 0) {
-      return 0;
-    }
-
-    const total = ratings.reduce((sum, rating) => sum + rating, 0);
-
-    return (total / ratings.length).toFixed(1);
-  }
-
-  function getTextAnswers(question) {
-    return responses.filter((response) => {
-      const answer = response.answers[question.id];
-
-      return typeof answer === "string" && answer.trim() !== "";
-    });
-  }
-
-  function getQuestionTypeName(type) {
-    if (type === "rating") {
-      return "Puanlama";
-    }
-
-    if (type === "yes-no") {
-      return "Evet / Hayır";
-    }
-
-    if (type === "multiple-choice") {
-      return "Çoktan Seçmeli";
-    }
-
-    return "Metin";
-  }
-
-  function getInitials(participant) {
-    return `${participant.firstName?.[0] || ""}${
-      participant.lastName?.[0] || ""
-    }`;
-  }
-
-  function formatDate(date) {
-    return new Date(date).toLocaleString("tr-TR", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
-  }
-
-  function handleDownloadCSV() {
-    if (responses.length === 0) {
-      return;
-    }
-
-    const headers = [
-      "Ad Soyad",
-      "Şehir",
-      "Gönderim Tarihi",
-      ...selectedSurvey.questions.map((question) => question.text),
-    ];
-
-    const rows = responses.map((response) => [
-      response.participant.fullName,
-      response.participant.city,
-      formatDate(response.submittedAt),
-
-      ...selectedSurvey.questions.map(
-        (question) => response.answers[question.id] ?? "",
-      ),
-    ]);
-
-    const escapeCSVValue = (value) => {
-      const stringValue = String(value);
-
-      return `"${stringValue.replaceAll('"', '""')}"`;
-    };
-
-    const csvContent = [
-      headers.map(escapeCSVValue).join(","),
-      ...rows.map((row) => row.map(escapeCSVValue).join(",")),
-    ].join("\n");
-
-    // Türkçe karakterlerin Excel'de düzgün
-    // görünmesi için BOM ekliyoruz.
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `${selectedSurvey.title}-yanitlar.csv`;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
   }
 
   const averageRating = calculateAverageRating();
+  const completionRate = calculateCompletionRate();
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10">
@@ -317,7 +510,7 @@ function Results() {
             </div>
 
             <p className="font-stack-notch mt-4 text-4xl font-bold text-amber-950">
-              %{selectedSurvey.completionRate}
+              %{completionRate}
             </p>
 
             <p className="mt-1 text-sm font-semibold text-amber-900">
@@ -348,7 +541,9 @@ function Results() {
             </div>
 
             <p className="font-stack-notch mt-4 text-4xl font-bold text-amber-950">
-              {responses.length > 0 ? averageRating : "—"}
+              {responses.length > 0 && averageRating !== 0
+                ? averageRating
+                : "—"}
             </p>
 
             <p className="mt-1 text-sm font-semibold text-amber-900">
@@ -386,7 +581,7 @@ function Results() {
               </div>
 
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
-                {selectedSurvey.questions.map((question, index) => {
+                {(selectedSurvey.questions || []).map((question, index) => {
                   const questionData = getQuestionData(question);
                   const textAnswers = getTextAnswers(question);
 
@@ -426,16 +621,16 @@ function Results() {
                                 className="rounded-xl bg-slate-50 p-4"
                               >
                                 <p className="text-sm leading-6 text-slate-700">
-                                  {response.answers[question.id]}
+                                  {response.answers?.[question.id]}
                                 </p>
 
-                                <p className="mt-2 text-xs font-medium text-slate-400">
-                                  {response.participant.fullName}
+                                <p className="mt-2 text-xs font-medium text-slate-500">
+                                  {response.participant?.fullName}
                                 </p>
                               </div>
                             ))
                           ) : (
-                            <p className="py-8 text-center text-sm text-slate-400">
+                            <p className="py-8 text-center text-sm text-slate-500">
                               Bu soruya henüz metin yanıtı verilmedi.
                             </p>
                           )}
@@ -489,6 +684,7 @@ function Results() {
                                   />
                                 </radialGradient>
                               </defs>
+
                               <Pie
                                 data={questionData}
                                 dataKey="count"
@@ -553,10 +749,6 @@ function Results() {
                                 itemStyle={{
                                   color: "#92400e",
                                   fontWeight: 600,
-                                }}
-                                cursor={{
-                                  fill: "#fef3c7",
-                                  fillOpacity: 0.45,
                                 }}
                               />
                             </PieChart>
@@ -642,11 +834,6 @@ function Results() {
                                 }}
                               />
 
-                              <Bar
-                                dataKey="count"
-                                fill={`url(#${barGradientId})`}
-                                radius={[6, 6, 0, 0]}
-                              />
                               <defs>
                                 <linearGradient
                                   id={barGradientId}
@@ -671,6 +858,12 @@ function Results() {
                                   />
                                 </linearGradient>
                               </defs>
+
+                              <Bar
+                                dataKey="count"
+                                fill={`url(#${barGradientId})`}
+                                radius={[6, 6, 0, 0]}
+                              />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -706,7 +899,7 @@ function Results() {
                     key={response.id}
                     className="flex items-center gap-4 border-b border-amber-200/70 px-6 py-4 transition duration-200 last:border-b-0 hover:bg-amber-100/70"
                   >
-                    {response.participant.avatar ? (
+                    {response.participant?.avatar ? (
                       <img
                         src={response.participant.avatar}
                         alt={response.participant.fullName}
@@ -720,11 +913,11 @@ function Results() {
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold text-amber-950">
-                        {response.participant.fullName}
+                        {response.participant?.fullName || "İsimsiz Katılımcı"}
                       </p>
 
                       <p className="mt-1 text-sm font-medium text-amber-800">
-                        📍 {response.participant.city}
+                        📍 {response.participant?.city || "Şehir bilgisi yok"}
                       </p>
                     </div>
 

@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../firebase.js";
 
 import {
   DndContext,
@@ -84,12 +87,14 @@ function SortableQuestion({ id, index, onDelete, children }) {
 }
 
 function CreateSurvey() {
+  const navigate = useNavigate();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState([]);
   const [publishMessage, setPublishMessage] = useState("");
 
-  // Yayınlandı mesajını 2 saniye sonra kaldırır.
+  // Mesajı 2 saniye sonra kaldırır.
   useEffect(() => {
     if (publishMessage === "") {
       return;
@@ -267,22 +272,39 @@ function CreateSurvey() {
     });
   }
 
-  function handleSaveDraft() {
+  // Taslak olarak kaydeder.
+  async function handleSaveDraft() {
     const draftSurvey = {
-      id: "survey-${Date.now()}",
       title: title.trim() || "İsimsiz Anket",
       description,
       status: "Taslak",
-      questionCount: question.length(),
+      questionCount: questions.length,
       responseCount: 0,
       completionRate: 0,
       questions,
     };
-    console.log("Taslak olarak kaydedilen anket:", draftSurvey);
-    setPublishMessage("Taslak Olarak Kaydedildi.");
+
+    try {
+      const docRef = await addDoc(collection(db, "surveys"), draftSurvey);
+
+      console.log("Taslak Firebase'e kaydedildi:", docRef.id);
+
+      setPublishMessage(
+        "Anket başarıyla taslak olarak kaydedildi. Ana sayfaya yönlendiriliyorsunuz...",
+      );
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Taslak kaydedilirken hata oluştu:", error);
+
+      setPublishMessage("Taslak kaydedilirken bir hata oluştu.");
+    }
   }
 
-  function handlePublish(event) {
+  // Anketi yayınlar.
+  async function handlePublish(event) {
     event.preventDefault();
 
     if (title.trim() === "") {
@@ -296,7 +318,6 @@ function CreateSurvey() {
     }
 
     const newSurvey = {
-      id: `survey-${Date.now()}`,
       title,
       description,
       status: "Yayında",
@@ -306,9 +327,23 @@ function CreateSurvey() {
       questions,
     };
 
-    console.log("Yeni oluşturulan anket:", newSurvey);
+    try {
+      const docRef = await addDoc(collection(db, "surveys"), newSurvey);
 
-    setPublishMessage("Anket başarıyla yayınlandı.");
+      console.log("Anket Firebase'e kaydedildi:", docRef.id);
+
+      setPublishMessage(
+        "Anket başarıyla yayınlandı. Ana sayfaya yönlendiriliyorsunuz...",
+      );
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Anket kaydedilirken hata oluştu:", error);
+
+      setPublishMessage("Anket kaydedilirken bir hata oluştu.");
+    }
   }
 
   return (
@@ -590,7 +625,7 @@ function CreateSurvey() {
             </button>
           </section>
 
-          {/* YAYINLA */}
+          {/* KAYDET / YAYINLA */}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button
@@ -609,6 +644,8 @@ function CreateSurvey() {
             </button>
           </div>
         </form>
+
+        {/* MESAJ */}
 
         {publishMessage && (
           <p

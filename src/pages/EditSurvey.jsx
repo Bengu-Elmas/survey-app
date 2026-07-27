@@ -11,8 +11,8 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
-
-import surveys from "../data/surveys.js";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase.js";
 
 /* SÜRÜKLENEBİLİR SORU KARTI */
 function SortableQuestion({ id, index, onDelete, children }) {
@@ -86,7 +86,7 @@ function SortableQuestion({ id, index, onDelete, children }) {
 function EditSurvey() {
   const { surveyId } = useParams();
 
-  const selectedSurvey = surveys.find((survey) => survey.id === surveyId);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
 
   const [title, setTitle] = useState(selectedSurvey?.title || "");
 
@@ -97,6 +97,29 @@ function EditSurvey() {
   const [questions, setQuestions] = useState(selectedSurvey?.questions || []);
 
   const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    async function fetchSurvey() {
+      try {
+        const surveyRef = doc(db, "surveys", surveyId);
+
+        const surveySnapshot = await getDoc(surveyRef);
+
+        if (surveySnapshot.exists()) {
+          const surveyData = {
+            id: surveySnapshot.id,
+            ...surveySnapshot.data(),
+          };
+
+          setSelectedSurvey(surveyData);
+        }
+      } catch (error) {
+        console.error("Anket alınırken hata oluştu:", error);
+      }
+    }
+
+    fetchSurvey();
+  }, [surveyId]);
 
   useEffect(() => {
     if (!selectedSurvey) {
@@ -290,24 +313,37 @@ function EditSurvey() {
     });
   }
 
-  function handleSaveDraft() {
-    const draftSurvey = {
-      id: `survey-${Date.now()}`,
+  async function handleSaveDraft() {
+    const updatedSurvey = {
+      ...selectedSurvey,
       title: title.trim() || "İsimsiz Anket",
       description,
       status: "Taslak",
       questionCount: questions.length,
-      responseCount: 0,
-      completionRate: 0,
       questions,
     };
 
-    console.log("Taslak olarak kaydedilen anket:", draftSurvey);
+    try {
+      await updateDoc(doc(db, "surveys", surveyId), {
+        title: title.trim() || "İsimsiz Anket",
+        description,
+        status: "Taslak",
+        questionCount: questions.length,
+        questions,
+      });
 
-    setPublishMessage("Anket taslak olarak kaydedildi.");
+      setSelectedSurvey(updatedSurvey);
+
+      console.log("Taslak olarak kaydedilen anket:", updatedSurvey);
+
+      setSaveMessage("Anket taslak olarak kaydedildi.");
+    } catch (error) {
+      console.error("Taslak kaydedilirken hata oluştu:", error);
+
+      setSaveMessage("Taslak kaydedilirken bir hata oluştu.");
+    }
   }
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const updatedSurvey = {
@@ -318,11 +354,23 @@ function EditSurvey() {
       questions,
     };
 
-    console.log("Güncellenen anket:", updatedSurvey);
+    try {
+      await updateDoc(doc(db, "surveys", surveyId), {
+        title,
+        description,
+        questionCount: questions.length,
+        questions,
+      });
 
-    setSaveMessage("Değişiklikler kaydedildi.");
+      console.log("Güncellenen anket:", updatedSurvey);
+
+      setSaveMessage("Değişiklikler kaydedildi.");
+    } catch (error) {
+      console.error("Anket güncellenirken hata oluştu:", error);
+
+      setSaveMessage("Anket güncellenirken bir hata oluştu.");
+    }
   }
-
   if (!selectedSurvey) {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
