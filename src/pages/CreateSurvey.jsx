@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../firebase.js";
 
-import {
-  DndContext,
-  closestCenter,
-} from "@dnd-kit/core"; /* Drag&Drop yapmak için */
+import FeedbackModal from "../components/FeedbackModal.jsx";
+
+import { DndContext, closestCenter } from "@dnd-kit/core";
 
 import {
   arrayMove,
@@ -43,8 +42,6 @@ function SortableQuestion({ id, index, onDelete, children }) {
         isDragging ? "relative z-10 opacity-70 shadow-xl" : ""
       }`}
     >
-      {/* SORU BAŞLIĞI + SÜRÜKLE + SİL */}
-
       <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <label
           htmlFor={`question-${id}`}
@@ -92,22 +89,31 @@ function CreateSurvey() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState([]);
-  const [publishMessage, setPublishMessage] = useState("");
 
-  // Mesajı 2 saniye sonra kaldırır.
-  useEffect(() => {
-    if (publishMessage === "") {
-      return;
-    }
+  const [isSaving, setIsSaving] = useState(false);
 
-    const timer = setTimeout(() => {
-      setPublishMessage("");
-    }, 2000);
+  const [feedback, setFeedback] = useState({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [publishMessage]);
+  function showFeedback(type, feedbackTitle, message) {
+    setFeedback({
+      isOpen: true,
+      type,
+      title: feedbackTitle,
+      message,
+    });
+  }
+
+  function closeFeedback() {
+    setFeedback((currentFeedback) => ({
+      ...currentFeedback,
+      isOpen: false,
+    }));
+  }
 
   // Yeni soru ekler.
   function handleAddQuestion() {
@@ -125,7 +131,12 @@ function CreateSurvey() {
   function handleQuestionChange(questionId, newText) {
     setQuestions(
       questions.map((question) =>
-        question.id === questionId ? { ...question, text: newText } : question,
+        question.id === questionId
+          ? {
+              ...question,
+              text: newText,
+            }
+          : question,
       ),
     );
   }
@@ -157,7 +168,6 @@ function CreateSurvey() {
           return question;
         }
 
-        // Çoktan seçmeliye geçilirse başlangıç seçenekleri oluştur.
         if (newType === "multiple-choice") {
           return {
             ...question,
@@ -166,7 +176,6 @@ function CreateSurvey() {
           };
         }
 
-        // Puanlamaya geçilirse varsayılan max değer 10 olsun.
         if (newType === "rating") {
           return {
             ...question,
@@ -274,6 +283,10 @@ function CreateSurvey() {
 
   // Taslak olarak kaydeder.
   async function handleSaveDraft() {
+    if (isSaving) {
+      return;
+    }
+
     const draftSurvey = {
       title: title.trim() || "İsimsiz Anket",
       description,
@@ -285,11 +298,15 @@ function CreateSurvey() {
     };
 
     try {
+      setIsSaving(true);
+
       const docRef = await addDoc(collection(db, "surveys"), draftSurvey);
 
       console.log("Taslak Firebase'e kaydedildi:", docRef.id);
 
-      setPublishMessage(
+      showFeedback(
+        "success",
+        "Taslak kaydedildi!",
         "Anket başarıyla taslak olarak kaydedildi. Ana sayfaya yönlendiriliyorsunuz...",
       );
 
@@ -299,7 +316,13 @@ function CreateSurvey() {
     } catch (error) {
       console.error("Taslak kaydedilirken hata oluştu:", error);
 
-      setPublishMessage("Taslak kaydedilirken bir hata oluştu.");
+      showFeedback(
+        "error",
+        "Taslak kaydedilemedi",
+        "Taslak kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -307,18 +330,32 @@ function CreateSurvey() {
   async function handlePublish(event) {
     event.preventDefault();
 
+    if (isSaving) {
+      return;
+    }
+
     if (title.trim() === "") {
-      setPublishMessage("Anket başlığı boş bırakılamaz.");
+      showFeedback(
+        "warning",
+        "Anket başlığı gerekli",
+        "Anketi yayınlamadan önce bir başlık yazmalısınız.",
+      );
+
       return;
     }
 
     if (questions.length === 0) {
-      setPublishMessage("Ankete en az bir soru eklemelisiniz.");
+      showFeedback(
+        "warning",
+        "Henüz soru eklenmedi",
+        "Anketi yayınlayabilmek için en az bir soru eklemelisiniz.",
+      );
+
       return;
     }
 
     const newSurvey = {
-      title,
+      title: title.trim(),
       description,
       status: "Yayında",
       questionCount: questions.length,
@@ -328,11 +365,15 @@ function CreateSurvey() {
     };
 
     try {
+      setIsSaving(true);
+
       const docRef = await addDoc(collection(db, "surveys"), newSurvey);
 
       console.log("Anket Firebase'e kaydedildi:", docRef.id);
 
-      setPublishMessage(
+      showFeedback(
+        "success",
+        "Anket yayınlandı!",
         "Anket başarıyla yayınlandı. Ana sayfaya yönlendiriliyorsunuz...",
       );
 
@@ -342,324 +383,335 @@ function CreateSurvey() {
     } catch (error) {
       console.error("Anket kaydedilirken hata oluştu:", error);
 
-      setPublishMessage("Anket kaydedilirken bir hata oluştu.");
+      showFeedback(
+        "error",
+        "Anket yayınlanamadı",
+        "Anket yayınlanırken bir hata oluştu. Lütfen tekrar deneyin.",
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-10">
-      <div className="mx-auto max-w-4xl">
-        <div>
-          <p className="font-stack-notch text-sm font-semibold text-amber-700">
-            YENİ ANKET
-          </p>
+    <>
+      {/* FEEDBACK MODAL */}
 
-          <h1 className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
-            Anket Oluştur
-          </h1>
+      <FeedbackModal
+        isOpen={feedback.isOpen}
+        type={feedback.type}
+        title={feedback.title}
+        message={feedback.message}
+        onClose={closeFeedback}
+      />
 
-          <p className="mt-1 text-sm font-medium text-slate-700">
-            Anket başlığını belirle, sorularını ekle ve yayınlamaya hazır hale
-            getir.
-          </p>
-        </div>
-
-        <form
-          onSubmit={handlePublish}
-          className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
-        >
-          {/* BAŞLIK */}
-
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-4xl">
           <div>
-            <label
-              htmlFor="survey-title"
-              className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
-            >
-              Anket başlığı
-            </label>
+            <p className="font-stack-notch text-sm font-semibold text-amber-700">
+              YENİ ANKET
+            </p>
 
-            <input
-              id="survey-title"
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Örneğin: Müşteri Memnuniyeti Anketi"
-              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-            />
+            <h1 className="font-stack-notch mt-1 text-4xl font-bold text-amber-950">
+              Anket Oluştur
+            </h1>
+
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              Anket başlığını belirle, sorularını ekle ve yayınlamaya hazır hale
+              getir.
+            </p>
           </div>
 
-          {/* AÇIKLAMA */}
+          <form
+            onSubmit={handlePublish}
+            className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
+          >
+            {/* BAŞLIK */}
 
-          <div>
-            <label
-              htmlFor="survey-description"
-              className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
-            >
-              Anket açıklaması
-            </label>
+            <div>
+              <label
+                htmlFor="survey-title"
+                className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
+              >
+                Anket başlığı
+              </label>
 
-            <textarea
-              id="survey-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows="4"
-              placeholder="Anket hakkında kısa bir açıklama yazın..."
-              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-            />
-          </div>
-
-          {/* SORULAR */}
-
-          <section>
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="font-stack-notch mb-2 block text-xl font-bold text-amber-950">
-                  Anket Soruları
-                </h2>
-
-                <p className="mt-1 text-sm font-medium text-slate-700">
-                  {questions.length} soru eklendi
-                </p>
-              </div>
+              <input
+                id="survey-title"
+                type="text"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Örneğin: Müşteri Memnuniyeti Anketi"
+                className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+              />
             </div>
 
-            {questions.length === 0 && (
-              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-white p-10 text-center shadow-sm shadow-amber-100/50">
-                <p className="font-stack-notch text-xl font-bold text-amber-950">
-                  Henüz soru eklenmedi
-                </p>
+            {/* AÇIKLAMA */}
 
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-amber-900/70">
-                  Anketini oluşturmaya başlamak için ilk sorunu ekleyebilirsin.
-                </p>
-              </div>
-            )}
-
-            {/* DRAG & DROP */}
-
-            <DndContext
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={questions.map((question) => question.id)}
-                strategy={verticalListSortingStrategy}
+            <div>
+              <label
+                htmlFor="survey-description"
+                className="font-stack-notch mb-2 block text-xl font-bold text-amber-950"
               >
-                <div className="space-y-5">
-                  {questions.map((question, index) => (
-                    <SortableQuestion
-                      key={question.id}
-                      id={question.id}
-                      index={index}
-                      onDelete={handleDeleteQuestion}
-                    >
-                      {/* SORU METNİ */}
+                Anket açıklaması
+              </label>
 
-                      <input
-                        id={`question-${question.id}`}
-                        type="text"
-                        value={question.text}
-                        onChange={(event) =>
-                          handleQuestionChange(question.id, event.target.value)
-                        }
-                        placeholder="Sorunuzu yazın..."
-                        className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                      />
+              <textarea
+                id="survey-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows="4"
+                placeholder="Anket hakkında kısa bir açıklama yazın..."
+                className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+              />
+            </div>
 
-                      {/* TÜR + ZORUNLULUK */}
+            {/* SORULAR */}
 
-                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                          <label
-                            htmlFor={`question-type-${question.id}`}
-                            className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
-                          >
-                            Soru türü
-                          </label>
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="font-stack-notch mb-2 block text-xl font-bold text-amber-950">
+                    Anket Soruları
+                  </h2>
 
-                          <select
-                            id={`question-type-${question.id}`}
-                            value={question.type}
-                            onChange={(event) =>
-                              handleQuestionTypeChange(
-                                question.id,
-                                event.target.value,
-                              )
-                            }
-                            className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                          >
-                            <option value="text">Metin</option>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    {questions.length} soru eklendi
+                  </p>
+                </div>
+              </div>
 
-                            <option value="multiple-choice">
-                              Çoktan Seçmeli
-                            </option>
+              {questions.length === 0 && (
+                <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-white p-10 text-center shadow-sm shadow-amber-100/50">
+                  <p className="font-stack-notch text-xl font-bold text-amber-950">
+                    Henüz soru eklenmedi
+                  </p>
 
-                            <option value="rating">Puanlama</option>
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-amber-900/70">
+                    Anketini oluşturmaya başlamak için ilk sorunu
+                    ekleyebilirsin.
+                  </p>
+                </div>
+              )}
 
-                            <option value="yes-no">Evet / Hayır</option>
-                          </select>
-                        </div>
+              {/* DRAG & DROP */}
 
-                        <div>
-                          <span className="font-stack-notch text-lg font-bold text-amber-950">
-                            Zorunluluk
-                          </span>
+              <DndContext
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={questions.map((question) => question.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-5">
+                    {questions.map((question, index) => (
+                      <SortableQuestion
+                        key={question.id}
+                        id={question.id}
+                        index={index}
+                        onDelete={handleDeleteQuestion}
+                      >
+                        {/* SORU METNİ */}
 
-                          <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
-                            <input
-                              type="checkbox"
-                              checked={question.required}
-                              onChange={() => handleRequiredChange(question.id)}
-                              className="h-4 w-4 cursor-pointer accent-amber-700"
-                            />
+                        <input
+                          id={`question-${question.id}`}
+                          type="text"
+                          value={question.text}
+                          onChange={(event) =>
+                            handleQuestionChange(
+                              question.id,
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Sorunuzu yazın..."
+                          className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                        />
 
-                            <span className="text-sm font-medium text-amber-950">
-                              Bu soru zorunlu
-                            </span>
-                          </label>
-                        </div>
-                      </div>
+                        {/* TÜR + ZORUNLULUK */}
 
-                      {/* PUANLAMA */}
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <label
+                              htmlFor={`question-type-${question.id}`}
+                              className="font-stack-notch mb-1 block text-lg font-bold text-amber-950"
+                            >
+                              Soru türü
+                            </label>
 
-                      {question.type === "rating" && (
-                        <div className="mt-4">
-                          <label
-                            htmlFor={`max-rating-${question.id}`}
-                            className="font-stack-notch text-lg font-bold text-amber-950"
-                          >
-                            Maksimum puan
-                          </label>
+                            <select
+                              id={`question-type-${question.id}`}
+                              value={question.type}
+                              onChange={(event) =>
+                                handleQuestionTypeChange(
+                                  question.id,
+                                  event.target.value,
+                                )
+                              }
+                              className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                            >
+                              <option value="text">Metin</option>
 
-                          <select
-                            id={`max-rating-${question.id}`}
-                            value={question.maxRating || 10}
-                            onChange={(event) =>
-                              handleMaxRatingChange(
-                                question.id,
-                                event.target.value,
-                              )
-                            }
-                            className="mt-1 h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-amber-950 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                          >
-                            <option value="5">1 - 5</option>
+                              <option value="multiple-choice">
+                                Çoktan Seçmeli
+                              </option>
 
-                            <option value="10">1 - 10</option>
-                          </select>
-                        </div>
-                      )}
+                              <option value="rating">Puanlama</option>
 
-                      {/* ÇOKTAN SEÇMELİ */}
-
-                      {question.type === "multiple-choice" && (
-                        <div className="mt-4">
-                          <h3 className="font-stack-notch text-lg font-bold text-amber-950">
-                            Seçenekler
-                          </h3>
-
-                          <div className="space-y-2">
-                            {(question.options || []).map(
-                              (option, optionIndex) => (
-                                <div
-                                  key={`${question.id}-option-${optionIndex}`}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span className="w-5 text-center text-sm font-bold text-amber-700">
-                                    {optionIndex + 1}.
-                                  </span>
-
-                                  <input
-                                    type="text"
-                                    value={option}
-                                    onChange={(event) =>
-                                      handleOptionChange(
-                                        question.id,
-                                        optionIndex,
-                                        event.target.value,
-                                      )
-                                    }
-                                    placeholder="Seçenek..."
-                                    className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm text-amber-950 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                                  />
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteOption(
-                                        question.id,
-                                        optionIndex,
-                                      )
-                                    }
-                                    className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ),
-                            )}
+                              <option value="yes-no">Evet / Hayır</option>
+                            </select>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleAddOption(question.id)}
-                            className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:border-amber-400 hover:bg-amber-100"
-                          >
-                            + Seçenek Ekle
-                          </button>
+                          <div>
+                            <span className="font-stack-notch text-lg font-bold text-amber-950">
+                              Zorunluluk
+                            </span>
+
+                            <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-white px-4 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50">
+                              <input
+                                type="checkbox"
+                                checked={question.required}
+                                onChange={() =>
+                                  handleRequiredChange(question.id)
+                                }
+                                className="h-4 w-4 cursor-pointer accent-amber-700"
+                              />
+
+                              <span className="text-sm font-medium text-amber-950">
+                                Bu soru zorunlu
+                              </span>
+                            </label>
+                          </div>
                         </div>
-                      )}
-                    </SortableQuestion>
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
 
-            {/* YENİ SORU */}
+                        {/* PUANLAMA */}
 
-            <button
-              type="button"
-              onClick={handleAddQuestion}
-              className="mt-5 w-full rounded-xl border-2 border-dashed border-amber-400 bg-amber-50/50 px-4 py-3 font-semibold text-amber-800 transition duration-300 hover:border-amber-600 hover:bg-amber-100 hover:shadow-md"
-            >
-              + Yeni Soru Ekle
-            </button>
-          </section>
+                        {question.type === "rating" && (
+                          <div className="mt-4">
+                            <label
+                              htmlFor={`max-rating-${question.id}`}
+                              className="font-stack-notch text-lg font-bold text-amber-950"
+                            >
+                              Maksimum puan
+                            </label>
 
-          {/* KAYDET / YAYINLA */}
+                            <select
+                              id={`max-rating-${question.id}`}
+                              value={question.maxRating || 10}
+                              onChange={(event) =>
+                                handleMaxRatingChange(
+                                  question.id,
+                                  event.target.value,
+                                )
+                              }
+                              className="mt-1 h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-medium text-amber-950 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                            >
+                              <option value="5">1 - 5</option>
+                              <option value="10">1 - 10</option>
+                            </select>
+                          </div>
+                        )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              className="w-full rounded-2xl border-2 border-amber-800 bg-amber-50 px-5 py-4 font-semibold text-amber-900 transition duration-300 hover:scale-[1.02] hover:bg-amber-100"
-            >
-              Taslak Olarak Kaydet
-            </button>
+                        {/* ÇOKTAN SEÇMELİ */}
 
-            <button
-              type="submit"
-              className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl"
-            >
-              Anketi Yayınla
-            </button>
-          </div>
-        </form>
+                        {question.type === "multiple-choice" && (
+                          <div className="mt-4">
+                            <h3 className="font-stack-notch text-lg font-bold text-amber-950">
+                              Seçenekler
+                            </h3>
 
-        {/* MESAJ */}
+                            <div className="space-y-2">
+                              {(question.options || []).map(
+                                (option, optionIndex) => (
+                                  <div
+                                    key={`${question.id}-option-${optionIndex}`}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="w-5 text-center text-sm font-bold text-amber-700">
+                                      {optionIndex + 1}.
+                                    </span>
 
-        {publishMessage && (
-          <p
-            className={`mt-4 rounded-lg px-4 py-3 text-sm font-semibold ${
-              publishMessage.includes("başarıyla")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {publishMessage}
-          </p>
-        )}
-      </div>
-    </main>
+                                    <input
+                                      type="text"
+                                      value={option}
+                                      onChange={(event) =>
+                                        handleOptionChange(
+                                          question.id,
+                                          optionIndex,
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="Seçenek..."
+                                      className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-sm text-amber-950 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                    />
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteOption(
+                                          question.id,
+                                          optionIndex,
+                                        )
+                                      }
+                                      className="rounded-lg bg-amber-900 px-3 py-2 text-sm font-semibold text-amber-50 transition duration-200 hover:bg-amber-950"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleAddOption(question.id)}
+                              className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition duration-200 hover:border-amber-400 hover:bg-amber-100"
+                            >
+                              + Seçenek Ekle
+                            </button>
+                          </div>
+                        )}
+                      </SortableQuestion>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+
+              {/* YENİ SORU */}
+
+              <button
+                type="button"
+                onClick={handleAddQuestion}
+                className="mt-5 w-full rounded-xl border-2 border-dashed border-amber-400 bg-amber-50/50 px-4 py-3 font-semibold text-amber-800 transition duration-300 hover:border-amber-600 hover:bg-amber-100 hover:shadow-md"
+              >
+                + Yeni Soru Ekle
+              </button>
+            </section>
+
+            {/* KAYDET / YAYINLA */}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={isSaving}
+                className="w-full rounded-2xl border-2 border-amber-800 bg-amber-50 px-5 py-4 font-semibold text-amber-900 transition duration-300 hover:scale-[1.02] hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSaving ? "Kaydediliyor..." : "Taslak Olarak Kaydet"}
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="w-full rounded-2xl bg-amber-800 px-5 py-4 font-semibold text-white shadow-lg shadow-amber-300/40 transition duration-300 hover:scale-[1.02] hover:bg-amber-900 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSaving ? "Kaydediliyor..." : "Anketi Yayınla"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </>
   );
 }
 

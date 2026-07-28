@@ -5,6 +5,7 @@ import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 
 import { db } from "../firebase.js";
 import SurveyCard from "../components/SurveyCard.jsx";
+import FeedbackModal from "../components/FeedbackModal.jsx";
 
 function Dashboard() {
   const [surveyDocuments, setSurveyDocuments] = useState([]);
@@ -12,6 +13,51 @@ function Dashboard() {
 
   const [surveysLoaded, setSurveysLoaded] = useState(false);
   const [responsesLoaded, setResponsesLoaded] = useState(false);
+
+  const [surveyToDelete, setSurveyToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [feedback, setFeedback] = useState({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+    mode: "message",
+  });
+
+  function showFeedback(type, feedbackTitle, message, mode = "message") {
+    setFeedback({
+      isOpen: true,
+      type,
+      title: feedbackTitle,
+      message,
+      mode,
+    });
+  }
+
+  function closeFeedback() {
+    if (isDeleting) {
+      return;
+    }
+
+    setFeedback((currentFeedback) => ({
+      ...currentFeedback,
+      isOpen: false,
+    }));
+
+    setSurveyToDelete(null);
+  }
+
+  function showTemporaryFeedback(type, feedbackTitle, message) {
+    showFeedback(type, feedbackTitle, message);
+
+    setTimeout(() => {
+      setFeedback((currentFeedback) => ({
+        ...currentFeedback,
+        isOpen: false,
+      }));
+    }, 1600);
+  }
 
   /* FIRESTORE'DAN ANKETLERİ DİNLE */
 
@@ -31,7 +77,14 @@ function Dashboard() {
 
       (error) => {
         console.error("Anketler alınırken hata oluştu:", error);
+
         setSurveysLoaded(true);
+
+        showFeedback(
+          "error",
+          "Anketler yüklenemedi",
+          "Anketler alınırken bir hata oluştu. Lütfen tekrar deneyin.",
+        );
       },
     );
 
@@ -58,7 +111,14 @@ function Dashboard() {
 
       (error) => {
         console.error("Yanıtlar alınırken hata oluştu:", error);
+
         setResponsesLoaded(true);
+
+        showFeedback(
+          "error",
+          "Yanıtlar yüklenemedi",
+          "Anket yanıtları alınırken bir hata oluştu. Lütfen tekrar deneyin.",
+        );
       },
     );
 
@@ -77,17 +137,6 @@ function Dashboard() {
     if (typeof answer === "string") {
       return answer.trim() !== "";
     }
-
-    /*
-      Multiple-choice cevapları artık:
-
-      {
-        optionIndex: 2,
-        value: "Seçenek"
-      }
-
-      şeklinde tutuluyor.
-    */
 
     if (typeof answer === "object") {
       if ("value" in answer) {
@@ -169,20 +218,31 @@ function Dashboard() {
         )
       : 0;
 
+  /* SİLME MODALINI AÇ */
+
+  function handleDelete(surveyId) {
+    setSurveyToDelete(surveyId);
+
+    showFeedback(
+      "warning",
+      "Anket silinsin mi?",
+      "Bu anket ve ankete ait tüm yanıtlar kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      "confirm",
+    );
+  }
+
   /* ANKETİ VE O ANKETE AİT RESPONSE'LARI SİL */
 
-  async function handleDelete(surveyId) {
-    const confirmed = window.confirm(
-      "Bu anketi ve ankete ait tüm yanıtları silmek istediğinize emin misiniz?",
-    );
-
-    if (!confirmed) {
+  async function confirmDelete() {
+    if (!surveyToDelete || isDeleting) {
       return;
     }
 
     try {
+      setIsDeleting(true);
+
       const relatedResponses = responses.filter(
-        (response) => response.surveyId === surveyId,
+        (response) => response.surveyId === surveyToDelete,
       );
 
       await Promise.all(
@@ -191,147 +251,207 @@ function Dashboard() {
         ),
       );
 
-      await deleteDoc(doc(db, "surveys", surveyId));
+      await deleteDoc(doc(db, "surveys", surveyToDelete));
 
       console.log("Anket ve ankete ait yanıtlar Firebase'den silindi.");
+
+      setSurveyToDelete(null);
+
+      showTemporaryFeedback(
+        "success",
+        "Anket silindi!",
+        "Anket ve ankete ait tüm yanıtlar başarıyla silindi.",
+      );
     } catch (error) {
       console.error("Anket silinirken hata oluştu:", error);
+
+      showFeedback(
+        "error",
+        "Anket silinemedi",
+        "Anket silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+      );
+    } finally {
+      setIsDeleting(false);
     }
   }
 
   /* PAYLAŞ */
 
   async function handleShare(survey) {
+    if (survey.status !== "Yayında") {
+      showFeedback(
+        "warning",
+        "Taslak anket paylaşılamaz",
+        "Anket bağlantısını paylaşabilmek için anketin önce yayınlanması gerekir.",
+      );
+
+      return;
+    }
+
     const surveyUrl = `${window.location.origin}/survey/${survey.id}`;
 
     try {
       await navigator.clipboard.writeText(surveyUrl);
 
-      alert("Anket bağlantısı panoya kopyalandı.");
+      showTemporaryFeedback(
+        "success",
+        "Bağlantı kopyalandı!",
+        "Anket bağlantısı panoya başarıyla kopyalandı.",
+      );
     } catch (error) {
       console.error("Bağlantı kopyalanırken hata oluştu:", error);
+
+      showFeedback(
+        "error",
+        "Bağlantı kopyalanamadı",
+        "Anket bağlantısı panoya kopyalanırken bir hata oluştu.",
+      );
     }
   }
 
   const loading = !surveysLoaded || !responsesLoaded;
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-8">
-      <div className="mx-auto max-w-6xl">
-        {/* ÜST KARŞILAMA ALANI */}
+    <>
+      {/* FEEDBACK MODAL */}
 
-        <section className="rounded-3xl bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400 px-8 py-10 text-white shadow-lg shadow-amber-900/20">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-amber-100">DASHBOARD</p>
+      <FeedbackModal
+        isOpen={feedback.isOpen}
+        type={feedback.type}
+        title={feedback.title}
+        message={feedback.message}
+        mode={feedback.mode}
+        onClose={closeFeedback}
+        onConfirm={confirmDelete}
+        confirmText="Sil"
+        cancelText="İptal"
+        isLoading={isDeleting}
+        danger={feedback.mode === "confirm"}
+      />
 
-              <h1 className="font-stack-notch mt-2 text-3xl font-bold md:text-4xl">
-                Anketlerini tek yerden yönet
-              </h1>
+      <main className="min-h-screen bg-slate-100 px-6 py-8">
+        <div className="mx-auto max-w-6xl">
+          {/* ÜST KARŞILAMA ALANI */}
 
-              <p className="mt-4 leading-7 text-amber-50">
-                Anketlerini oluştur, düzenle ve katılımcılardan gelen yanıtları
-                kolayca takip et.
+          <section className="rounded-3xl bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400 px-8 py-10 text-white shadow-lg shadow-amber-900/20">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold text-amber-100">
+                  DASHBOARD
+                </p>
+
+                <h1 className="font-stack-notch mt-2 text-3xl font-bold md:text-4xl">
+                  Anketlerini tek yerden yönet
+                </h1>
+
+                <p className="mt-4 leading-7 text-amber-50">
+                  Anketlerini oluştur, düzenle ve katılımcılardan gelen
+                  yanıtları kolayca takip et.
+                </p>
+              </div>
+
+              <Link
+                to="/create"
+                className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
+              >
+                + Yeni Anket Oluştur
+              </Link>
+            </div>
+          </section>
+
+          {/* İSTATİSTİKLER */}
+
+          <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
+              <p className="text-sm font-semibold text-amber-800">
+                Toplam Anket
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-amber-950">
+                {totalSurveys}
               </p>
             </div>
 
-            <Link
-              to="/create"
-              className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
-            >
-              + Yeni Anket Oluştur
-            </Link>
-          </div>
-        </section>
-
-        {/* İSTATİSTİKLER */}
-
-        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
-            <p className="text-sm font-semibold text-amber-800">Toplam Anket</p>
-
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              {totalSurveys}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
-            <p className="text-sm font-semibold text-amber-800">
-              Yayındaki Anket
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              {publishedSurveys}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
-            <p className="text-sm font-semibold text-amber-800">Toplam Yanıt</p>
-
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              {totalResponses}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
-            <p className="text-sm font-semibold text-amber-800">
-              Ortalama Tamamlanma
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              %{averageCompletion}
-            </p>
-          </div>
-        </section>
-
-        {/* ANKETLER */}
-
-        <section className="mt-10">
-          <div className="mb-6 flex items-center gap-4">
-            <div className="h-12 w-1.5 rounded-full bg-gradient-to-b from-amber-500 to-amber-800" />
-
-            <div>
-              <h2 className="font-stack-notch text-2xl font-bold text-amber-950">
-                Anketlerim
-              </h2>
-
-              <p className="mt-1 text-sm font-medium text-slate-700">
-                Oluşturduğun tüm anketleri buradan yönetebilirsin.
-              </p>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
-              <p className="font-medium text-amber-900">
-                Anketler yükleniyor...
-              </p>
-            </div>
-          ) : surveys.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-10 text-center">
-              <p className="font-stack-notch text-xl font-bold text-amber-950">
-                Henüz anket bulunmuyor
+            <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
+              <p className="text-sm font-semibold text-amber-800">
+                Yayındaki Anket
               </p>
 
-              <p className="mt-2 text-sm font-medium text-amber-800">
-                İlk anketini oluşturarak başlayabilirsin.
+              <p className="mt-2 text-3xl font-bold text-amber-950">
+                {publishedSurveys}
               </p>
             </div>
-          ) : (
-            <div className="grid gap-5 lg:grid-cols-2">
-              {surveys.map((survey) => (
-                <SurveyCard
-                  key={survey.id}
-                  survey={survey}
-                  onShare={handleShare}
-                  onDelete={handleDelete}
-                />
-              ))}
+
+            <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
+              <p className="text-sm font-semibold text-amber-800">
+                Toplam Yanıt
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-amber-950">
+                {totalResponses}
+              </p>
             </div>
-          )}
-        </section>
-      </div>
-    </main>
+
+            <div className="rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-amber-50 p-5 shadow-lg shadow-amber-200/40 transition duration-300 hover:scale-105 hover:shadow-xl">
+              <p className="text-sm font-semibold text-amber-800">
+                Ortalama Tamamlanma
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-amber-950">
+                %{averageCompletion}
+              </p>
+            </div>
+          </section>
+
+          {/* ANKETLER */}
+
+          <section className="mt-10">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="h-12 w-1.5 rounded-full bg-gradient-to-b from-amber-500 to-amber-800" />
+
+              <div>
+                <h2 className="font-stack-notch text-2xl font-bold text-amber-950">
+                  Anketlerim
+                </h2>
+
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Oluşturduğun tüm anketleri buradan yönetebilirsin.
+                </p>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
+                <p className="font-medium text-amber-900">
+                  Anketler yükleniyor...
+                </p>
+              </div>
+            ) : surveys.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-10 text-center">
+                <p className="font-stack-notch text-xl font-bold text-amber-950">
+                  Henüz anket bulunmuyor
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-amber-800">
+                  İlk anketini oluşturarak başlayabilirsin.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-5 lg:grid-cols-2">
+                {surveys.map((survey) => (
+                  <SurveyCard
+                    key={survey.id}
+                    survey={survey}
+                    onShare={handleShare}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
 
