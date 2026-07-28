@@ -51,3 +51,25 @@ html {
   font-optical-sizing: auto;
   font-style: normal;
 }
+
+@keyframes authFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-18px) rotate(4deg);
+  }
+}
+
+.auth-float {
+  animation: authFloat 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-float {
+    animation: none;
+  }
+}
