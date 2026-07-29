@@ -147,7 +147,7 @@ function Register() {
             </p>
 
             <h1 className="font-stack-notch mt-2 text-3xl font-bold text-amber-950">
-              Aramıza katıl
+              ARAMIZA KATIL
             </h1>
 
             <p className="mx-auto mt-3 max-w-sm text-sm font-medium leading-6 text-slate-600">
