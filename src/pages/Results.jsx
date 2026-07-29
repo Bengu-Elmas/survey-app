@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 import {
   Bar,
@@ -27,11 +28,13 @@ import { db } from "../firebase.js";
 
 function Results() {
   const { surveyId } = useParams();
+  const { currentUser } = useAuth();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Hangi katılımcının cevapları açık?
   const [expandedResponseId, setExpandedResponseId] = useState(null);
@@ -41,8 +44,8 @@ function Results() {
       try {
         setLoading(true);
         setErrorMessage("");
+        setAccessDenied(false);
 
-        // Önce ilgili anketi Firestore'dan alıyoruz.
         const surveyRef = doc(db, "surveys", surveyId);
         const surveySnapshot = await getDoc(surveyRef);
 
@@ -57,9 +60,17 @@ function Results() {
           ...surveySnapshot.data(),
         };
 
+        // Anket giriş yapan kullanıcıya ait mi?
+        if (surveyData.ownerId !== currentUser.uid) {
+          setAccessDenied(true);
+          setSelectedSurvey(null);
+          setResponses([]);
+          return;
+        }
+
         setSelectedSurvey(surveyData);
 
-        // Sadece bu ankete ait yanıtları getiriyoruz.
+        // Sahiplik kontrolünden geçtikten sonra yanıtları getiriyoruz.
         const responsesQuery = query(
           collection(db, "responses"),
           where("surveyId", "==", surveyId),
@@ -84,8 +95,10 @@ function Results() {
       }
     }
 
-    fetchResults();
-  }, [surveyId]);
+    if (currentUser) {
+      fetchResults();
+    }
+  }, [surveyId, currentUser]);
 
   function getQuestionData(question) {
     if (question.type === "rating") {
@@ -386,6 +399,36 @@ function Results() {
           <Link
             to="/"
             className="mt-8 inline-flex items-center rounded-xl bg-amber-800 px-6 py-3 text-sm font-semibold text-white transition duration-300 hover:scale-105 hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <main className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-6 py-10">
+        <div className="w-full max-w-3xl rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-10 py-20 text-center shadow-xl shadow-amber-200/40">
+          <img src="/usericon.svg" alt="" className="mx-auto h-16 w-16" />
+
+          <p className="font-stack-notch mt-5 text-sm font-bold tracking-[0.2em] text-amber-700">
+            ERİŞİM ENGELLENDİ
+          </p>
+
+          <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
+            BU ANKET SANA AİT DEĞİL !
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
+            Yalnızca kendi oluşturduğun anketlerin sonuçlarını
+            görüntüleyebilirsin.
+          </p>
+
+          <Link
+            to="/"
+            className="mt-8 inline-flex items-center rounded-xl bg-amber-800 px-6 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:scale-105 hover:bg-amber-900"
           >
             Anketlerime Dön
           </Link>

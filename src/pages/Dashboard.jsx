@@ -15,6 +15,7 @@ import SurveyCard from "../components/SurveyCard.jsx";
 import FeedbackModal from "../components/FeedbackModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import GuestHome from "../components/GuestHome.jsx";
+import Footer from "../components/Footer.jsx";
 
 function Dashboard() {
   const { currentUser } = useAuth();
@@ -470,6 +471,7 @@ function Dashboard() {
           </section>
         </div>
       </main>
+      <Footer />
     </>
   );
 }
