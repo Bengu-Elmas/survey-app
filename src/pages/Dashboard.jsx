@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 
 import { db } from "../firebase.js";
 import SurveyCard from "../components/SurveyCard.jsx";
 import FeedbackModal from "../components/FeedbackModal.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import GuestHome from "../components/GuestHome.jsx";
 
 function Dashboard() {
+  const { currentUser } = useAuth();
   const [surveyDocuments, setSurveyDocuments] = useState([]);
   const [responses, setResponses] = useState([]);
 
@@ -62,8 +72,19 @@ function Dashboard() {
   /* FIRESTORE'DAN ANKETLERİ DİNLE */
 
   useEffect(() => {
-    const unsubscribeSurveys = onSnapshot(
+    if (!currentUser) {
+      setSurveyDocuments([]);
+      setSurveysLoaded(true);
+      return;
+    }
+
+    const surveysQuery = query(
       collection(db, "surveys"),
+      where("ownerId", "==", currentUser.uid),
+    );
+
+    const unsubscribeSurveys = onSnapshot(
+      surveysQuery,
 
       (snapshot) => {
         const surveyList = snapshot.docs.map((surveyDoc) => ({
@@ -77,21 +98,14 @@ function Dashboard() {
 
       (error) => {
         console.error("Anketler alınırken hata oluştu:", error);
-
         setSurveysLoaded(true);
-
-        showFeedback(
-          "error",
-          "Anketler yüklenemedi",
-          "Anketler alınırken bir hata oluştu. Lütfen tekrar deneyin.",
-        );
       },
     );
 
     return () => {
       unsubscribeSurveys();
     };
-  }, []);
+  }, [currentUser]);
 
   /* FIRESTORE'DAN YANITLARI DİNLE */
 
@@ -311,6 +325,10 @@ function Dashboard() {
 
   const loading = !surveysLoaded || !responsesLoaded;
 
+  if (!currentUser) {
+    return <GuestHome />;
+  }
+
   return (
     <>
       {/* FEEDBACK MODAL */}
@@ -350,15 +368,16 @@ function Dashboard() {
                 </p>
               </div>
 
-              <Link
-                to="/create"
-                className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
-              >
-                + Yeni Anket Oluştur
-              </Link>
+              {currentUser && (
+                <Link
+                  to="/create"
+                  className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
+                >
+                  + Yeni Anket Oluştur
+                </Link>
+              )}
             </div>
           </section>
-
           {/* İSTATİSTİKLER */}
 
           <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

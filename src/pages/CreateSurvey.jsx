@@ -7,6 +7,8 @@ import FeedbackModal from "../components/FeedbackModal.jsx";
 
 import { DndContext, closestCenter } from "@dnd-kit/core";
 
+import { useAuth } from "../context/AuthContext.jsx";
+
 import {
   arrayMove,
   SortableContext,
@@ -85,7 +87,7 @@ function SortableQuestion({ id, index, onDelete, children }) {
 
 function CreateSurvey() {
   const navigate = useNavigate();
-
+  const { currentUser } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -295,6 +297,7 @@ function CreateSurvey() {
       responseCount: 0,
       completionRate: 0,
       questions,
+      ownerId: currentUser.uid,
     };
 
     try {
@@ -354,7 +357,7 @@ function CreateSurvey() {
       return;
     }
 
-    const newSurvey = {
+    const publishedSurvey = {
       title: title.trim(),
       description,
       status: "Yayında",
@@ -362,12 +365,13 @@ function CreateSurvey() {
       responseCount: 0,
       completionRate: 0,
       questions,
+      ownerId: currentUser.uid,
     };
 
     try {
       setIsSaving(true);
 
-      const docRef = await addDoc(collection(db, "surveys"), newSurvey);
+      const docRef = await addDoc(collection(db, "surveys"), publishedSurvey);
 
       console.log("Anket Firebase'e kaydedildi:", docRef.id);
 

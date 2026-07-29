@@ -15,6 +15,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 import { db } from "../firebase.js";
 import FeedbackModal from "../components/FeedbackModal.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 /* SÜRÜKLENEBİLİR SORU KARTI */
 function SortableQuestion({ id, index, onDelete, children }) {
@@ -88,8 +89,10 @@ function SortableQuestion({ id, index, onDelete, children }) {
 function EditSurvey() {
   const { surveyId } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [pageStatus, setPageStatus] = useState("loading");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -123,24 +126,38 @@ function EditSurvey() {
   useEffect(() => {
     async function fetchSurvey() {
       try {
+        setPageStatus("loading");
+
         const surveyRef = doc(db, "surveys", surveyId);
         const surveySnapshot = await getDoc(surveyRef);
 
-        if (surveySnapshot.exists()) {
-          const surveyData = {
-            id: surveySnapshot.id,
-            ...surveySnapshot.data(),
-          };
-
-          setSelectedSurvey(surveyData);
+        if (!surveySnapshot.exists()) {
+          setPageStatus("not-found");
+          return;
         }
+
+        const surveyData = {
+          id: surveySnapshot.id,
+          ...surveySnapshot.data(),
+        };
+
+        if (surveyData.ownerId !== currentUser.uid) {
+          setPageStatus("forbidden");
+          return;
+        }
+
+        setSelectedSurvey(surveyData);
+        setPageStatus("ready");
       } catch (error) {
         console.error("Anket alınırken hata oluştu:", error);
+        setPageStatus("not-found");
       }
     }
 
-    fetchSurvey();
-  }, [surveyId]);
+    if (currentUser) {
+      fetchSurvey();
+    }
+  }, [surveyId, currentUser]);
 
   useEffect(() => {
     if (!selectedSurvey) {
@@ -444,17 +461,59 @@ function EditSurvey() {
     }
   }
 
-  if (!selectedSurvey) {
+  if (pageStatus === "loading") {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">
-            Anket bulunamadı
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
+          <p className="font-stack-notch font-bold text-amber-900">
+            Anket kontrol ediliyor...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (pageStatus === "not-found") {
+    return (
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
+          <h1 className="font-stack-notch text-2xl font-bold text-amber-950">
+            ANKET BULUNAMADI.
           </h1>
 
           <p className="mt-2 text-slate-600">
             Bu ID ile eşleşen bir anket bulunmuyor.
           </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (pageStatus === "forbidden") {
+    return (
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-lg">
+          <img src="/usericon.svg" alt="" className="mx-auto h-16 w-16" />
+
+          <p className="font-stack-notch mt-4 text-sm font-bold tracking-[0.15em] text-amber-700">
+            ERİŞİM ENGELLENDİ
+          </p>
+
+          <h1 className="font-stack-notch mt-2 text-2xl font-bold text-amber-950">
+            BU ANKET SANA AİT DEĞİL !
+          </h1>
+
+          <p className="mt-3 text-sm font-medium text-slate-600">
+            Yalnızca kendi oluşturduğun anketleri düzenleyebilirsin.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="mt-6 rounded-xl bg-amber-800 px-5 py-3 font-semibold text-white transition hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </button>
         </div>
       </main>
     );

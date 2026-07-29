@@ -38,8 +38,14 @@ function Navbar() {
   }
 
   return (
-    <header className="relative z-20 bg-slate-100 px-6 pt-4 pb-5">
-      <nav className="mx-auto max-w-6xl rounded-2xl border border-amber-200/70 bg-gradient-to-r from-white via-amber-50/50 to-white shadow-lg shadow-amber-300/30">
+    <header
+      className={`relative z-20 px-6 pt-4 ${
+        currentUser
+          ? "bg-slate-100 pb-5"
+          : "bg-gradient-to-r from-amber-950 via-amber-700 to-amber-500 pb-0"
+      }`}
+    >
+      <nav className="mx-auto max-w-6xl rounded-2xl border border-amber-200/70 bg-gradient-to-r from-white via-amber-50/50 to-white shadow-lg shadow-amber-950/20">
         <div className="flex items-center justify-between px-6 py-4">
           <Logo />
 
