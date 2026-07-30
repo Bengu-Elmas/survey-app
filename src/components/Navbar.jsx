@@ -7,15 +7,18 @@ import { useAuth } from "../context/AuthContext.jsx";
 function Navbar() {
   const navigate = useNavigate();
 
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userProfile, logout } = useAuth();
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const userName =
+    userProfile?.fullName ||
     currentUser?.displayName ||
     currentUser?.email?.split("@")[0] ||
     "Kullanıcı";
+
+  const userEmail = userProfile?.email || currentUser?.email || "";
 
   async function handleLogout() {
     if (isLoggingOut) {
@@ -88,6 +91,7 @@ function Navbar() {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
+                    aria-hidden="true"
                     className={`h-4 w-4 transition duration-300 ${
                       userMenuOpen ? "rotate-180" : ""
                     }`}
@@ -116,13 +120,23 @@ function Navbar() {
                           </p>
 
                           <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
-                            {currentUser.email}
+                            {userEmail}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="border-t border-amber-100 p-2">
+                    {/* MENÜ İŞLEMLERİ */}
+
+                    <div className="space-y-2 border-t border-amber-100 p-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold text-amber-900 transition duration-300 hover:bg-amber-100"
+                      >
+                        PROFİLİMİ DÜZENLE
+                      </Link>
+
                       <button
                         type="button"
                         onClick={handleLogout}

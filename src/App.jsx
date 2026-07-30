@@ -9,6 +9,7 @@ import ThankYou from "./pages/ThankYou.jsx";
 import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Profile from "./pages/Profile.jsx";
 
 function App() {
   const location = useLocation();
@@ -16,7 +17,8 @@ function App() {
     location.pathname.startsWith("/survey/") ||
     location.pathname.startsWith("/thank-you/") ||
     location.pathname === "/register" ||
-    location.pathname === "/login";
+    location.pathname === "/login" ||
+    location.pathname === "/profile";
   return (
     <>
       {!hideNavbar && <Navbar />}
@@ -54,6 +56,14 @@ function App() {
         <Route path="/thank-you/:surveyId" element={<ThankYou />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
