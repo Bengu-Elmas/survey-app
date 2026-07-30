@@ -26,6 +26,28 @@ import {
 
 import { db } from "../firebase.js";
 
+function DistributionTooltip({ active, payload }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const data = payload[0]?.payload || {};
+  const count = Number(data.count ?? payload[0]?.value ?? 0);
+  const percentage = Number(data.percentage) || 0;
+
+  return (
+    <div className="rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 shadow-xl shadow-amber-900/10">
+      <p className="font-stack-notch text-sm font-bold text-amber-950">
+        {data.name || "Yanıt"}
+      </p>
+
+      <p className="mt-1 text-sm font-semibold text-amber-800">
+        {count} kişi • %{percentage}
+      </p>
+    </div>
+  );
+}
+
 function Results() {
   const { surveyId } = useParams();
   const { currentUser } = useAuth();
@@ -100,11 +122,21 @@ function Results() {
     }
   }, [surveyId, currentUser]);
 
+  function addPercentages(data) {
+    const totalAnswers = data.reduce((total, item) => total + item.count, 0);
+
+    return data.map((item) => ({
+      ...item,
+      percentage:
+        totalAnswers > 0 ? Math.round((item.count / totalAnswers) * 100) : 0,
+    }));
+  }
+
   function getQuestionData(question) {
     if (question.type === "rating") {
       const maxRating = question.maxRating || 10;
 
-      return Array.from({ length: maxRating }, (_, index) => {
+      const ratingData = Array.from({ length: maxRating }, (_, index) => {
         const rating = index + 1;
 
         const count = responses.filter(
@@ -116,27 +148,35 @@ function Results() {
           count,
         };
       });
+
+      return addPercentages(ratingData);
     }
 
     if (question.type === "yes-no") {
-      return ["Evet", "Hayır"].map((answer) => ({
+      const yesNoData = ["Evet", "Hayır"].map((answer) => ({
         name: answer,
 
         count: responses.filter(
           (response) => response.answers?.[question.id] === answer,
         ).length,
       }));
+
+      return addPercentages(yesNoData);
     }
 
     if (question.type === "multiple-choice") {
-      return (question.options || []).map((option, optionIndex) => ({
-        name: option,
+      const multipleChoiceData = (question.options || []).map(
+        (option, optionIndex) => ({
+          name: option,
 
-        count: responses.filter(
-          (response) =>
-            response.answers?.[question.id]?.optionIndex === optionIndex,
-        ).length,
-      }));
+          count: responses.filter(
+            (response) =>
+              response.answers?.[question.id]?.optionIndex === optionIndex,
+          ).length,
+        }),
+      );
+
+      return addPercentages(multipleChoiceData);
     }
 
     return [];
@@ -847,29 +887,7 @@ function Results() {
                                 ))}
                               </Pie>
 
-                              <Tooltip
-                                formatter={(value) => [
-                                  `${value} kişi`,
-                                  "Yanıt",
-                                ]}
-                                contentStyle={{
-                                  backgroundColor: "#fffbeb",
-                                  border: "1px solid #f59e0b",
-                                  borderRadius: "12px",
-                                  boxShadow:
-                                    "0 10px 25px rgba(146, 64, 14, 0.15)",
-                                  padding: "10px 14px",
-                                }}
-                                labelStyle={{
-                                  color: "#78350f",
-                                  fontWeight: 700,
-                                  marginBottom: "4px",
-                                }}
-                                itemStyle={{
-                                  color: "#92400e",
-                                  fontWeight: 600,
-                                }}
-                              />
+                              <Tooltip content={<DistributionTooltip />} />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
@@ -926,27 +944,7 @@ function Results() {
                               />
 
                               <Tooltip
-                                formatter={(value) => [
-                                  `${value} kişi`,
-                                  "Yanıt",
-                                ]}
-                                contentStyle={{
-                                  backgroundColor: "#fffbeb",
-                                  border: "1px solid #f59e0b",
-                                  borderRadius: "12px",
-                                  boxShadow:
-                                    "0 10px 25px rgba(146, 64, 14, 0.15)",
-                                  padding: "10px 14px",
-                                }}
-                                labelStyle={{
-                                  color: "#78350f",
-                                  fontWeight: 700,
-                                  marginBottom: "4px",
-                                }}
-                                itemStyle={{
-                                  color: "#92400e",
-                                  fontWeight: 600,
-                                }}
+                                content={<DistributionTooltip />}
                                 cursor={{
                                   fill: "#fef3c7",
                                   fillOpacity: 0.45,
