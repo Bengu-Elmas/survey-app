@@ -115,7 +115,7 @@ function Dashboard() {
     };
   }, [currentUser]);
 
-  /* FIRESTORE'DAN YANITLARI DİNLE */
+  /* FIRESTORE'DAN KULLANICININ YANITLARINI DİNLE */
 
   useEffect(() => {
     if (!currentUser) {
@@ -127,8 +127,13 @@ function Dashboard() {
     setResponses([]);
     setResponsesLoaded(false);
 
-    const unsubscribeResponses = onSnapshot(
+    const responsesQuery = query(
       collection(db, "responses"),
+      where("surveyOwnerId", "==", currentUser.uid),
+    );
+
+    const unsubscribeResponses = onSnapshot(
+      responsesQuery,
 
       (snapshot) => {
         const responseList = snapshot.docs.map((responseDoc) => ({

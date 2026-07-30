@@ -96,6 +96,7 @@ function Results() {
         const responsesQuery = query(
           collection(db, "responses"),
           where("surveyId", "==", surveyId),
+          where("surveyOwnerId", "==", currentUser.uid),
         );
 
         const responsesSnapshot = await getDocs(responsesQuery);

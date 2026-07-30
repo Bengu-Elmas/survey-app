@@ -221,6 +221,7 @@ function SurveyFill() {
 
     const surveyResponse = {
       surveyId: selectedSurvey.id,
+      surveyOwnerId: selectedSurvey.ownerId,
 
       participant: {
         firstName: participant.firstName,
