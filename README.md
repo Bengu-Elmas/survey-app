@@ -1,12 +1,12 @@
 # Survey App
 
-React, Tailwind CSS ve Firebase kullanılarak geliştirilen interaktif bir anket oluşturma, paylaşma ve sonuç analiz uygulamasıdır.
+React, Tailwind CSS, Firebase Authentication ve Cloud Firestore kullanılarak geliştirilen interaktif bir anket oluşturma, paylaşma ve sonuç analiz uygulamasıdır.
 
 🔗 **Live Demo:** https://survey-app-rosy-nine.vercel.app/
 
 ## Proje Hakkında
 
-Survey App, kullanıcıların farklı soru tipleriyle anketler oluşturmasına, oluşturulan anketleri taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır.
+Survey App, kullanıcıların hesap oluşturarak farklı soru tipleriyle anketler hazırlamasına, kendi anketlerini taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır.
 
 Proje, frontend stajı kapsamında React ekosistemini, Firebase ile veri yönetimini, modern arayüz geliştirme yaklaşımlarını ve üçüncü parti kütüphanelerin kullanımını uygulamalı olarak öğrenmek amacıyla geliştirilmiştir.
 
@@ -15,6 +15,14 @@ Arayüz tasarımında uygulamanın görsel bütünlüğüne özellikle önem ver
 ---
 
 ## Özellikler
+
+### Kullanıcı Hesapları
+
+- Firebase Authentication ile kayıt olma, giriş yapma ve çıkış yapma
+- Kullanıcı bazlı anket sahipliği
+- Yalnızca hesap sahibinin erişebildiği düzenleme ve sonuç sayfaları
+- Ad, soyad ve e-posta bilgilerinin düzenlenebildiği profil sayfası
+- E-posta değişikliklerinde doğrulama bağlantısı gönderme
 
 ### Anket Yönetimi
 
@@ -26,6 +34,9 @@ Arayüz tasarımında uygulamanın görsel bütünlüğüne özellikle önem ver
 - Taslak anketlerin doldurulmasını engelleme
 - Taslak anketlerin sonuçlarının görüntülenmesini engelleme
 - Anket başlığı ve açıklaması düzenleme
+- Anket adına göre arama
+- Oluşturulma, güncellenme ve isme göre sıralama
+- Oluşturulma ve son güncellenme tarihlerini görüntüleme
 
 ### Soru Yönetimi
 
@@ -66,6 +77,7 @@ Ayrıca:
 - Metin yanıtlarını ayrı ayrı görüntüleme
 - Katılımcı listesini görüntüleme
 - Katılımcıların bireysel cevaplarını detaylı olarak inceleme
+- Grafik araç ipuçlarında seçenek adı, kişi sayısı ve yüzdelik oranı görüntüleme
 - Yanıtları **CSV** formatında dışa aktarma
 
 ### Arayüz
@@ -76,6 +88,8 @@ Ayrıca:
 - Boxy SVG kullanılarak tarafımdan tasarlanan uygulama logosu
 - Boxy SVG kullanılarak tarafımdan tasarlanan taslak ve yayında durum ikonları
 - Projeye özel sürükle-bırak ikonu
+- Giriş, kayıt, kullanıcı profili ve şifre görünürlüğü için özel SVG ikonları
+- Giriş, kayıt ve profil sayfalarında hareketli amber arka plan tasarımı
 - Yükleme, hata ve boş durum ekranları
 - Responsive grafikler
 - Vercel üzerinde canlı deployment
@@ -92,6 +106,7 @@ Aşağıdaki görsel varlıklar **Bengü Elmas tarafından Boxy SVG kullanılara
 - Taslak durumunu temsil eden ikon
 - Yayında durumunu temsil eden ikon
 - Sürükle-bırak işlemlerinde kullanılan özel ikonlar
+- Giriş, kayıt, kullanıcı profili ve şifre görünürlüğü ikonları
 
 Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setinden alınmamış, Survey App projesinin görsel diliyle uyumlu olacak şekilde özel olarak hazırlanmıştır.
 
@@ -101,31 +116,36 @@ Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setind
 
 ## Kullanılan Teknolojiler
 
-| Teknoloji                      | Kullanım                                                     |
-| ------------------------------ | ------------------------------------------------------------ |
-| **React**                      | Kullanıcı arayüzü ve component yapısı                        |
-| **Vite**                       | Geliştirme ve build ortamı                                   |
-| **Tailwind CSS**               | Arayüz tasarımı                                              |
-| **React Router**               | Sayfalar arası yönlendirme                                   |
-| **Firebase / Cloud Firestore** | Anket ve yanıt verilerinin saklanması                        |
-| **Recharts**                   | Sonuç grafiklerinin oluşturulması                            |
-| **dnd-kit**                    | Sürükle-bırak soru sıralaması                                |
-| **Random User API**            | Katılımcı profillerinin oluşturulması                        |
-| **Boxy SVG**                   | Uygulama logosu ve projeye özel SVG ikonlarının tasarlanması |
-| **Vercel**                     | Deployment ve hosting                                        |
+| Teknoloji                   | Kullanım                                                     |
+| --------------------------- | ------------------------------------------------------------ |
+| **React**                   | Kullanıcı arayüzü ve component yapısı                        |
+| **Vite**                    | Geliştirme ve build ortamı                                   |
+| **Tailwind CSS**            | Arayüz tasarımı                                              |
+| **React Router**            | Sayfalar arası yönlendirme ve korumalı sayfalar              |
+| **Firebase Authentication** | Kayıt, giriş, oturum ve profil işlemleri                     |
+| **Cloud Firestore**         | Kullanıcı, anket ve yanıt verilerinin saklanması             |
+| **Recharts**                | Sonuç grafiklerinin oluşturulması                            |
+| **dnd-kit**                 | Sürükle-bırak soru sıralaması                                |
+| **Random User API**         | Katılımcı profillerinin oluşturulması                        |
+| **Boxy SVG**                | Uygulama logosu ve projeye özel SVG ikonlarının tasarlanması |
+| **Vercel**                  | Deployment ve hosting                                        |
 
 ---
 
 ## Sayfalar
 
-| Sayfa             | Açıklama                                                                |
-| ----------------- | ----------------------------------------------------------------------- |
-| **Dashboard**     | Anketlerin ve genel istatistiklerin görüntülendiği ana sayfa            |
-| **Create Survey** | Yeni anket oluşturma ekranı                                             |
-| **Edit Survey**   | Mevcut anketleri ve soruları düzenleme ekranı                           |
-| **Survey Fill**   | Katılımcıların anketi doldurduğu ekran                                  |
-| **Results**       | Grafikler, istatistikler ve katılımcı yanıtlarının görüntülendiği ekran |
-| **Thank You**     | Anket gönderildikten sonra görüntülenen teşekkür ekranı                 |
+| Sayfa             | Açıklama                                                                 |
+| ----------------- | ------------------------------------------------------------------------ |
+| **Guest Home**    | Giriş yapmamış kullanıcılar için tanıtım ve yönlendirme sayfası          |
+| **Dashboard**     | Kullanıcıya ait anketlerin ve genel istatistiklerin görüntülendiği sayfa |
+| **Create Survey** | Yeni anket oluşturma ekranı                                              |
+| **Edit Survey**   | Mevcut anketleri ve soruları düzenleme ekranı                            |
+| **Survey Fill**   | Katılımcıların anketi doldurduğu ekran                                   |
+| **Results**       | Grafikler, istatistikler ve katılımcı yanıtlarının görüntülendiği ekran  |
+| **Thank You**     | Anket gönderildikten sonra görüntülenen teşekkür ekranı                  |
+| **Register**      | Yeni kullanıcı hesabı oluşturma ekranı                                   |
+| **Login**         | Kullanıcı giriş ekranı                                                   |
+| **Profile**       | Ad, soyad ve e-posta bilgilerinin güncellendiği hesap ayarları ekranı    |
 
 ---
 
@@ -138,6 +158,7 @@ Projeyi yerel ortamda çalıştırabilmek için aşağıdakilerin kurulu veya ha
 - **Git**
 - Bir **Firebase projesi**
 - Etkinleştirilmiş **Cloud Firestore** veritabanı
+- Etkinleştirilmiş **Email/Password Firebase Authentication** yöntemi
 - Firebase Web App yapılandırma bilgileri
 
 Random User API kullanımı için ayrıca bir API anahtarı gerekmemektedir.
@@ -165,16 +186,29 @@ survey-app/
 ├── public/
 │   ├── survey-logo.svg
 │   ├── dragicon.svg
+│   ├── usericon.svg
+│   ├── giris-icon.svg
+│   ├── kayit-icon.svg
 │   └── ...
 │
 ├── src/
 │   ├── components/
+│   │   ├── AuthBackground.jsx
+│   │   ├── FeedbackModal.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── ProtectedRoute.jsx
 │   │   └── SurveyCard.jsx
+│   │
+│   ├── context/
+│   │   └── AuthContext.jsx
 │   │
 │   ├── pages/
 │   │   ├── CreateSurvey.jsx
 │   │   ├── Dashboard.jsx
 │   │   ├── EditSurvey.jsx
+│   │   ├── Login.jsx
+│   │   ├── Profile.jsx
+│   │   ├── Register.jsx
 │   │   ├── Results.jsx
 │   │   ├── SurveyFill.jsx
 │   │   └── ThankYou.jsx
@@ -219,34 +253,50 @@ Sonuçlar ve Grafikler Oluşturulur
 
 ## Firebase Veri Yapısı
 
-Uygulamada temel olarak iki Firestore collection kullanılmaktadır.
+Uygulamada üç temel Firestore collection kullanılmaktadır.
+
+### `users`
+
+Kullanıcı profil bilgilerini saklar.
+
+```text
+users/
+└── userId
+    ├── firstName
+    ├── lastName
+    ├── fullName
+    ├── email
+    ├── role
+    ├── createdAt
+    └── updatedAt
+```
 
 ### `surveys`
 
-Anket bilgilerini ve soruları saklar.
-
-Örnek yapı:
+Anket bilgilerini, soruları ve anket sahibini saklar.
 
 ```text
 surveys/
 └── surveyId
+    ├── ownerId
     ├── title
     ├── description
     ├── status
     ├── questionCount
-    └── questions[]
+    ├── questions[]
+    ├── createdAt
+    └── updatedAt
 ```
 
 ### `responses`
 
 Katılımcı bilgilerini ve verilen cevapları saklar.
 
-Örnek yapı:
-
 ```text
 responses/
 └── responseId
     ├── surveyId
+    ├── surveyOwnerId
     ├── participant
     │   ├── fullName
     │   ├── city
@@ -310,29 +360,17 @@ Yayındaki bir anket:
 
 Firebase yapılandırma değerleri `.env.local` üzerinden yönetilerek repository içerisinde doğrudan tutulmamaktadır.
 
-Firebase Web API anahtarının kullanım alanı Google Cloud Console üzerinden:
+Firebase Authentication ile kullanıcı oturumları yönetilmekte; oluşturma, düzenleme, sonuç görüntüleme ve profil sayfaları korumalı route yapısıyla sınırlandırılmaktadır.
 
-- İzin verilen web adresleri
-- Gerekli Firebase API'leri
+Firestore Security Rules ile:
 
-ile sınırlandırılmıştır.
+- Kullanıcılar yalnızca kendi profil belgelerini okuyabilir ve güncelleyebilir.
+- Kullanıcılar yalnızca kendi anketlerini düzenleyebilir ve silebilir.
+- Yayındaki anketler herkese açık olarak okunabilir ve doldurulabilir.
+- Taslak anketlere yalnızca anket sahibi erişebilir.
+- Yanıtlar yalnızca ilgili anketin sahibi tarafından okunabilir ve silinebilir.
 
-Local geliştirme ortamı ve Vercel production domaini izin verilen web adresleri arasında tanımlanmıştır.
-
-> Firestore Security Rules uygulamanın erişim ihtiyaçlarına göre ayrıca yapılandırılmalıdır.
-
-## Planlanan Geliştirmeler
-
-Projenin ilerleyen aşamalarında aşağıdaki özelliklerin eklenmesi planlanmaktadır:
-
-- Firebase Authentication ile kullanıcı giriş ve kayıt sistemi
-- Kullanıcı bazlı anket sahipliği
-- Her kullanıcının yalnızca kendi oluşturduğu anketleri görüntüleyebilmesi
-- Anket oluşturan kullanıcı profilinin Survey Card üzerinde gösterilmesi
-- Random User tabanlı oluşturucu profilleri
-- Daha belirgin başarı, hata ve uyarı pop-up'ları
-- Gelişmiş kullanıcı yetkilendirme sistemi
-- Ek sonuç filtreleme ve analiz seçenekleri
+Firebase Web API anahtarının kullanım alanı Google Cloud Console üzerinden izin verilen web adresleri ve gerekli Firebase API'leri ile sınırlandırılmıştır.
 
 ---
 
@@ -343,14 +381,6 @@ Survey App için özel olarak oluşturulan uygulama logosu ve SVG ikonlar **Beng
 Bu görsel öğeler **Boxy SVG** kullanılarak oluşturulmuş olup Survey App projesine özel tasarımlardır.
 
 Logo ve projeye özel SVG tasarımların görsel hakları **Bengü Elmas'a aittir**.
-
----
-
-## Geliştirici
-
-**Bengü Elmas**
-
-GitHub: https://github.com/Bengu-Elmas
 
 ---
 
