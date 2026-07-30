@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 
 import FeedbackModal from "../components/FeedbackModal.jsx";
@@ -298,6 +298,8 @@ function CreateSurvey() {
       completionRate: 0,
       questions,
       ownerId: currentUser.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
 
     try {
@@ -366,6 +368,8 @@ function CreateSurvey() {
       completionRate: 0,
       questions,
       ownerId: currentUser.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
 
     try {

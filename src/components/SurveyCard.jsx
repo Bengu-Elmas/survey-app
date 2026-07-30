@@ -25,6 +25,34 @@ function SurveyCard({ survey, onShare, onDelete }) {
     return null;
   }
 
+  function formatSurveyDate(timestamp) {
+    if (!timestamp) {
+      return "Tarih bilgisi yok";
+    }
+
+    let date;
+
+    if (typeof timestamp.toDate === "function") {
+      date = timestamp.toDate();
+    } else if (timestamp.seconds) {
+      date = new Date(timestamp.seconds * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+
+    if (Number.isNaN(date.getTime())) {
+      return "Tarih bilgisi yok";
+    }
+
+    return date.toLocaleString("tr-TR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   return (
     <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
       {/* BAŞLIK */}
@@ -65,7 +93,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
             {survey.questionCount ?? 0}
           </p>
 
-          <p className="text-s font-bold text-amber-800">Soru</p>
+          <p className="text-sm font-bold text-amber-800">Soru</p>
         </div>
 
         <div>
@@ -73,7 +101,7 @@ function SurveyCard({ survey, onShare, onDelete }) {
             {survey.responseCount ?? 0}
           </p>
 
-          <p className="text-s font-bold text-amber-800">Yanıt</p>
+          <p className="text-sm font-bold text-amber-800">Yanıt</p>
         </div>
 
         <div>
@@ -81,8 +109,26 @@ function SurveyCard({ survey, onShare, onDelete }) {
             %{survey.completionRate ?? 0}
           </p>
 
-          <p className="text-s font-bold text-amber-800">Tamamlama</p>
+          <p className="text-sm font-bold text-amber-800">Tamamlama</p>
         </div>
+      </div>
+
+      {/* TARİHLER */}
+
+      <div className="mt-5 flex flex-col gap-2 border-t border-amber-200/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-stack-notch text-sm font-bold text-amber-900">
+          Oluşturuldu:{" "}
+          <span className="font-semibold text-amber-800">
+            {formatSurveyDate(survey.createdAt)}
+          </span>
+        </p>
+
+        <p className="font-stack-notch text-sm font-bold text-amber-900">
+          Son güncelleme:{" "}
+          <span className="font-semibold text-amber-800">
+            {formatSurveyDate(survey.updatedAt || survey.createdAt)}
+          </span>
+        </p>
       </div>
 
       {/* BUTONLAR */}

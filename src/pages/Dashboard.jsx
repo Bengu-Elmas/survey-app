@@ -19,6 +19,7 @@ import Footer from "../components/Footer.jsx";
 
 function Dashboard() {
   const { currentUser } = useAuth();
+
   const [surveyDocuments, setSurveyDocuments] = useState([]);
   const [responses, setResponses] = useState([]);
 
@@ -27,6 +28,9 @@ function Dashboard() {
 
   const [surveyToDelete, setSurveyToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("created-desc");
 
   const [feedback, setFeedback] = useState({
     isOpen: false,
@@ -79,6 +83,9 @@ function Dashboard() {
       return;
     }
 
+    setSurveyDocuments([]);
+    setSurveysLoaded(false);
+
     const surveysQuery = query(
       collection(db, "surveys"),
       where("ownerId", "==", currentUser.uid),
@@ -111,6 +118,15 @@ function Dashboard() {
   /* FIRESTORE'DAN YANITLARI DİNLE */
 
   useEffect(() => {
+    if (!currentUser) {
+      setResponses([]);
+      setResponsesLoaded(true);
+      return;
+    }
+
+    setResponses([]);
+    setResponsesLoaded(false);
+
     const unsubscribeResponses = onSnapshot(
       collection(db, "responses"),
 
@@ -140,7 +156,31 @@ function Dashboard() {
     return () => {
       unsubscribeResponses();
     };
-  }, []);
+  }, [currentUser]);
+
+  /* TARİHİ SIRALAMADA KULLANILABİLECEK SAYIYA ÇEVİR */
+
+  function getTimestampValue(timestamp) {
+    if (!timestamp) {
+      return 0;
+    }
+
+    if (typeof timestamp.toDate === "function") {
+      return timestamp.toDate().getTime();
+    }
+
+    if (timestamp.seconds) {
+      return timestamp.seconds * 1000;
+    }
+
+    const convertedDate = new Date(timestamp);
+
+    if (Number.isNaN(convertedDate.getTime())) {
+      return 0;
+    }
+
+    return convertedDate.getTime();
+  }
 
   /* BİR CEVABIN DOLU OLUP OLMADIĞINI KONTROL ET */
 
@@ -174,7 +214,6 @@ function Dashboard() {
           );
 
           const questions = survey.questions || [];
-
           const responseCount = surveyResponses.length;
 
           let completionRate = 0;
@@ -206,11 +245,72 @@ function Dashboard() {
               survey.questions?.length ?? survey.questionCount ?? 0,
 
             responseCount,
-
             completionRate,
           };
         })
       : [];
+
+  /* ARAMA VE SIRALAMA */
+
+  const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase("tr-TR");
+
+  const filteredAndSortedSurveys = [...surveys]
+    .filter((survey) => {
+      const normalizedTitle = (survey.title || "").toLocaleLowerCase("tr-TR");
+
+      return normalizedTitle.includes(normalizedSearchTerm);
+    })
+    .sort((firstSurvey, secondSurvey) => {
+      if (sortOption === "created-desc") {
+        return (
+          getTimestampValue(secondSurvey.createdAt) -
+          getTimestampValue(firstSurvey.createdAt)
+        );
+      }
+
+      if (sortOption === "created-asc") {
+        return (
+          getTimestampValue(firstSurvey.createdAt) -
+          getTimestampValue(secondSurvey.createdAt)
+        );
+      }
+
+      if (sortOption === "updated-desc") {
+        return (
+          getTimestampValue(secondSurvey.updatedAt || secondSurvey.createdAt) -
+          getTimestampValue(firstSurvey.updatedAt || firstSurvey.createdAt)
+        );
+      }
+
+      if (sortOption === "updated-asc") {
+        return (
+          getTimestampValue(firstSurvey.updatedAt || firstSurvey.createdAt) -
+          getTimestampValue(secondSurvey.updatedAt || secondSurvey.createdAt)
+        );
+      }
+
+      if (sortOption === "title-asc") {
+        return (firstSurvey.title || "").localeCompare(
+          secondSurvey.title || "",
+          "tr",
+          {
+            sensitivity: "base",
+          },
+        );
+      }
+
+      if (sortOption === "title-desc") {
+        return (secondSurvey.title || "").localeCompare(
+          firstSurvey.title || "",
+          "tr",
+          {
+            sensitivity: "base",
+          },
+        );
+      }
+
+      return 0;
+    });
 
   /* DASHBOARD GENEL İSTATİSTİKLERİ */
 
@@ -246,7 +346,7 @@ function Dashboard() {
     );
   }
 
-  /* ANKETİ VE O ANKETE AİT RESPONSE'LARI SİL */
+  /* ANKETİ VE ANKETE AİT YANITLARI SİL */
 
   async function confirmDelete() {
     if (!surveyToDelete || isDeleting) {
@@ -369,16 +469,15 @@ function Dashboard() {
                 </p>
               </div>
 
-              {currentUser && (
-                <Link
-                  to="/create"
-                  className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
-                >
-                  + Yeni Anket Oluştur
-                </Link>
-              )}
+              <Link
+                to="/create"
+                className="w-fit rounded-xl bg-white px-5 py-3 font-semibold text-amber-900 shadow-md transition duration-300 hover:scale-105 hover:bg-amber-50"
+              >
+                + Yeni Anket Oluştur
+              </Link>
             </div>
           </section>
+
           {/* İSTATİSTİKLER */}
 
           <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -426,19 +525,67 @@ function Dashboard() {
           {/* ANKETLER */}
 
           <section className="mt-10">
-            <div className="mb-6 flex items-center gap-4">
-              <div className="h-12 w-1.5 rounded-full bg-gradient-to-b from-amber-500 to-amber-800" />
+            <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              {/* BAŞLIK */}
 
-              <div>
-                <h2 className="font-stack-notch text-2xl font-bold text-amber-950">
-                  Anketlerim
-                </h2>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-1.5 rounded-full bg-gradient-to-b from-amber-500 to-amber-800" />
 
-                <p className="mt-1 text-sm font-medium text-slate-700">
-                  Oluşturduğun tüm anketleri buradan yönetebilirsin.
-                </p>
+                <div>
+                  <h2 className="font-stack-notch text-2xl font-bold text-amber-950">
+                    Anketlerim
+                  </h2>
+
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    Oluşturduğun tüm anketleri buradan yönetebilirsin.
+                  </p>
+                </div>
+              </div>
+
+              {/* ARAMA VE SIRALAMA */}
+
+              <div className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_230px] lg:w-auto">
+                <div className="relative">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-700"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+
+                    <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                  </svg>
+
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Anket adına göre ara..."
+                    aria-label="Anket adına göre ara"
+                    className="h-12 w-full rounded-xl border border-amber-200 bg-white pl-12 pr-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 sm:min-w-72"
+                  />
+                </div>
+
+                <select
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value)}
+                  aria-label="Anketleri sırala"
+                  className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-semibold text-amber-900 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                >
+                  <option value="created-desc">En yeni oluşturulan</option>
+                  <option value="created-asc">En eski oluşturulan</option>
+                  <option value="updated-desc">Son güncellenen</option>
+                  <option value="updated-asc">En eski güncellenen</option>
+                  <option value="title-asc">İsme göre A–Z</option>
+                  <option value="title-desc">İsme göre Z–A</option>
+                </select>
               </div>
             </div>
+
+            {/* ANKET LİSTESİ */}
 
             {loading ? (
               <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
@@ -456,9 +603,27 @@ function Dashboard() {
                   İlk anketini oluşturarak başlayabilirsin.
                 </p>
               </div>
+            ) : filteredAndSortedSurveys.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-10 text-center">
+                <p className="font-stack-notch text-xl font-bold text-amber-950">
+                  Aramana uygun anket bulunamadı
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-amber-800">
+                  Farklı bir anket adı yazarak tekrar deneyebilirsin.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="mt-5 rounded-xl bg-amber-800 px-5 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-amber-900"
+                >
+                  Aramayı Temizle
+                </button>
+              </div>
             ) : (
               <div className="grid gap-5 lg:grid-cols-2">
-                {surveys.map((survey) => (
+                {filteredAndSortedSurveys.map((survey) => (
                   <SurveyCard
                     key={survey.id}
                     survey={survey}
@@ -471,6 +636,7 @@ function Dashboard() {
           </section>
         </div>
       </main>
+
       <Footer />
     </>
   );

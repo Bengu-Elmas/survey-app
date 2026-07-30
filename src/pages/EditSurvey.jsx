@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 
 import { db } from "../firebase.js";
 import FeedbackModal from "../components/FeedbackModal.jsx";
@@ -359,6 +359,7 @@ function EditSurvey() {
         status: "Taslak",
         questionCount: questions.length,
         questions,
+        updatedAt: serverTimestamp(),
       });
 
       setSelectedSurvey(updatedSurvey);
@@ -433,8 +434,8 @@ function EditSurvey() {
         status: "Yayında",
         questionCount: questions.length,
         questions,
+        updatedAt: serverTimestamp(),
       });
-
       setSelectedSurvey(updatedSurvey);
 
       console.log("Güncellenen anket:", updatedSurvey);
