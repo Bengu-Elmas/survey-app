@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="48px" height="48px" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="250" cy="439.52" r="140.589" id="gradient-0">
+      <stop offset="0" style="stop-color: rgb(187, 77, 0)"/>
+      <stop offset="1" style="stop-color: rgb(49.487% 12.887% 0%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="250" cy="439.52" r="140.589" id="gradient-1">
+      <stop offset="0" style="stop-color: rgb(187, 77, 0)"/>
+      <stop offset="1" style="stop-color: rgb(49.487% 12.887% 0%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="60.486" cy="257.587" r="58.598" id="gradient-2">
+      <stop offset="0" style="stop-color: rgb(254, 230, 133)"/>
+      <stop offset="1" style="stop-color: rgb(58.371% 51.283% 14.463%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="60.486" cy="257.587" r="58.598" id="gradient-3" gradientTransform="matrix(0.60177, 0, 0, 0.654544, 64.535933, 138.767426)">
+      <stop offset="0" style="stop-color: rgb(254, 230, 133)"/>
+      <stop offset="1" style="stop-color: rgb(58.371% 51.283% 14.463%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="60.486" cy="257.587" r="58.598" id="gradient-4" gradientTransform="matrix(1, 0, 0, 1, 375.961395, -185.646862)">
+      <stop offset="0" style="stop-color: rgb(254, 230, 133)"/>
+      <stop offset="1" style="stop-color: rgb(58.371% 51.283% 14.463%)"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="60.486" cy="257.587" r="58.598" id="gradient-5" gradientTransform="matrix(1, 0, 0, 1, 376.998543, 93.342022)">
+      <stop offset="0" style="stop-color: rgb(254, 230, 133)"/>
+      <stop offset="1" style="stop-color: rgb(58.371% 51.283% 14.463%)"/>
+    </radialGradient>
+  </defs>
+  <rect x="0.01" y="0.406" width="499.979" height="499.188" style="fill: rgb(70, 25, 1); stroke: rgb(70, 25, 1);" rx="86.231" ry="86.231"/>
+  <circle style="fill: rgba(123, 51, 6, 0.282); stroke: rgba(123, 51, 6, 0);" cx="250" cy="250" r="207.534"/>
+  <circle style="fill: url(&quot;#gradient-0&quot;); stroke: rgb(131, 31, 31);" cx="250" cy="439.52" r="140.589" transform="matrix(1.32614, 0, 0, 1.286279, -81.535088, -69.27475)"/>
+  <circle style="stroke: rgb(131, 31, 31); fill: url(&quot;#gradient-1&quot;);" cx="250" cy="439.52" r="140.589" transform="matrix(0.891286, 0, 0, 0.927525, 27.178511, -157.665802)"/>
+  <circle style="stroke: rgb(0, 0, 0);" cx="201.602" cy="205.29" r="38.192" transform="matrix(0.43974, 0, 0, 0.949755, 108.874001, 32.013714)"/>
+  <circle style="stroke: rgb(0, 0, 0);" cx="201.602" cy="205.29" r="38.192" transform="matrix(0.43974, 0, 0, 0.949755, 202.564514, 32.491264)"/>
+  <path style="stroke: rgba(255, 186, 0, 0); fill: rgb(255, 186, 0); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(-0.015232, -0.785913, 1.014397, -0.01966, -650.805805, -326.992926)" d="M 839.996 363.504 A 115 115 0 1 1 839.996 593.496 A 189.217 189.217 0 0 0 839.996 363.504 Z" bx:shape="crescent 841 478.5 115 181 0.665 1@aa5a9c2c"/>
+  <path d="M 249.764 16.973 L 270.254 106.735 L 337.283 52.777 L 305.998 126.138 C 285.333 122.902 250.855 124.078 228.608 125.136 C 217.601 125.661 205.218 125.926 193.836 126.856 L 162.245 52.777 L 229.274 106.735 L 249.764 16.973 Z" style="fill: rgb(255, 186, 0); stroke: rgb(255, 186, 0); stroke-width: 26px; stroke-linecap: round; stroke-linejoin: round;"/>
+  <path d="M 161.088 95.215 L 173.776 148.689 L 215.28 116.544 L 195.908 160.247 C 183.113 158.32 161.764 159.02 147.989 159.65 C 141.173 159.963 133.505 160.121 126.458 160.675 L 106.897 116.544 L 148.401 148.689 L 161.088 95.215 Z" style="fill: rgb(255, 186, 0); stroke: rgb(255, 186, 0); stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.872696, -0.488264, 0.488264, 0.872696, 0.000003, -0.000006)"/>
+  <path d="M 339.993 159.638 L 352.681 106.164 L 394.185 138.309 L 374.813 94.606 C 362.018 96.533 340.669 95.833 326.894 95.203 C 320.078 94.89 312.41 94.732 305.363 94.178 L 285.802 138.309 L 327.306 106.164 L 339.993 159.638 Z" style="fill: rgb(255, 186, 0); stroke: rgb(255, 186, 0); stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; transform-origin: 339.994px 126.908px;" transform="matrix(-0.872696, -0.488264, 0.488264, -0.872696, 0.000029, 0.000045)"/>
+  <path d="M 60.486 200.545 L 70.845 247.503 L 119.084 257.587 L 70.845 267.671 L 60.486 314.629 L 50.127 267.671 L 1.888 257.587 L 50.127 247.503 Z" bx:shape="star 60.486 257.587 58.598 57.042 0.25 4 1@1f95f171" style="stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-2&quot;);"/>
+  <path d="M 100.934 270.033 L 107.167 300.769 L 136.196 307.369 L 107.167 313.969 L 100.934 344.705 L 94.701 313.969 L 65.672 307.369 L 94.701 300.769 Z" bx:shape="star 100.934 307.369 35.262 37.336 0.25 4 1@5a575776" style="stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-3&quot;); stroke-width: 1;"/>
+  <path d="M 436.448 14.898 L 446.807 61.856 L 495.046 71.94 L 446.807 82.024 L 436.448 128.982 L 426.089 82.024 L 377.85 71.94 L 426.089 61.856 Z" bx:shape="star 436.448 71.94 58.598 57.042 0.25 4 1@11d845fa" style="stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-4&quot;); stroke-width: 1;"/>
+  <path d="M 437.484 293.887 L 447.843 340.845 L 496.082 350.929 L 447.843 361.013 L 437.484 407.971 L 427.125 361.013 L 378.886 350.929 L 427.125 340.845 Z" bx:shape="star 437.484 350.929 58.598 57.042 0.25 4 1@c371f516" style="stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-5&quot;); stroke-width: 1;"/>
+</svg>
