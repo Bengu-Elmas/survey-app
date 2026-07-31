@@ -453,11 +453,11 @@ function Dashboard() {
         danger={feedback.mode === "confirm"}
       />
 
-      <main className="min-h-screen bg-slate-100 px-6 py-8">
+      <main className="min-h-screen bg-slate-100 px-3 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-6xl">
           {/* ÜST KARŞILAMA ALANI */}
 
-          <section className="rounded-3xl bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400 px-8 py-10 text-white shadow-lg shadow-amber-900/20">
+          <section className="rounded-3xl bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400 px-5 py-7 text-white shadow-lg shadow-amber-900/20 sm:px-8 sm:py-10">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold text-amber-100">

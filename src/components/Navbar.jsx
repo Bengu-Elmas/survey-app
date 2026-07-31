@@ -31,7 +31,6 @@ function Navbar() {
       await logout();
 
       setUserMenuOpen(false);
-
       navigate("/login");
     } catch (error) {
       console.error("Çıkış yapılırken hata oluştu:", error);
@@ -42,47 +41,49 @@ function Navbar() {
 
   return (
     <header
-      className={`relative z-20 px-6 pt-4 ${
+      className={`relative z-20 px-3 pt-3 sm:px-6 sm:pt-4 ${
         currentUser
-          ? "bg-slate-100 pb-5"
+          ? "bg-slate-100 pb-4 sm:pb-5"
           : "bg-gradient-to-r from-amber-950 via-amber-700 to-amber-500 pb-0"
       }`}
     >
       <nav className="mx-auto max-w-6xl rounded-2xl border border-amber-200/70 bg-gradient-to-r from-white via-amber-50/50 to-white shadow-lg shadow-amber-950/20">
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-6 sm:py-4">
           <Logo />
 
           {/* GİRİŞ YAPILMIŞSA */}
-
           {currentUser ? (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap">
               <Link
                 to="/"
-                className="rounded-xl px-5 py-3.5 text-sm font-bold text-amber-900 transition duration-300 hover:bg-amber-100"
+                className="flex-1 rounded-xl px-3 py-3 text-center text-sm font-bold text-amber-900 transition duration-300 hover:bg-amber-100 sm:flex-none sm:px-5 sm:py-3.5"
               >
                 Anketlerim
               </Link>
 
               <Link
                 to="/create"
-                className="rounded-xl bg-amber-800 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-amber-300/30 transition duration-300 hover:-translate-y-0.5 hover:bg-amber-900 hover:shadow-lg"
+                className="flex-1 rounded-xl bg-amber-800 px-3 py-3 text-center text-sm font-bold text-white shadow-md shadow-amber-300/30 transition duration-300 hover:-translate-y-0.5 hover:bg-amber-900 hover:shadow-lg sm:flex-none sm:px-6 sm:py-3.5"
               >
                 + Yeni Anket Oluştur
               </Link>
 
               {/* KULLANICI */}
-
-              <div className="relative ml-2">
+              <div className="relative w-full sm:ml-auto sm:w-auto lg:ml-2">
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   aria-expanded={userMenuOpen}
                   aria-label="Kullanıcı menüsünü aç"
-                  className="flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 pr-4 text-[#461901] shadow-sm transition duration-300 hover:border-amber-300 hover:bg-amber-100 hover:shadow-md"
+                  className="flex w-full items-center justify-between gap-3 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-[#461901] shadow-sm transition duration-300 hover:border-amber-300 hover:bg-amber-100 hover:shadow-md sm:w-auto sm:justify-start sm:pr-4"
                 >
-                  <img src="/usericon.svg" alt="" className="h-10 w-10" />
+                  <img
+                    src="/usericon.svg"
+                    alt=""
+                    className="h-9 w-9 sm:h-10 sm:w-10"
+                  />
 
-                  <span className="font-stack-notch max-w-32 truncate text-sm font-bold">
+                  <span className="font-stack-notch min-w-0 flex-1 truncate text-left text-sm font-bold sm:max-w-32">
                     {userName}
                   </span>
 
@@ -92,7 +93,7 @@ function Navbar() {
                     stroke="currentColor"
                     strokeWidth="2.5"
                     aria-hidden="true"
-                    className={`h-4 w-4 transition duration-300 ${
+                    className={`h-4 w-4 shrink-0 transition duration-300 ${
                       userMenuOpen ? "rotate-180" : ""
                     }`}
                   >
@@ -105,11 +106,9 @@ function Navbar() {
                 </button>
 
                 {/* DROPDOWN */}
-
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-[calc(100%+10px)] w-72 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-xl shadow-amber-950/10">
+                  <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-xl shadow-amber-950/10 sm:left-auto sm:w-72">
                     {/* KULLANICI BİLGİLERİ */}
-
                     <div className="bg-gradient-to-br from-amber-50 to-white px-5 py-4">
                       <div className="flex items-center gap-3">
                         <img src="/usericon.svg" alt="" className="h-12 w-12" />
@@ -127,7 +126,6 @@ function Navbar() {
                     </div>
 
                     {/* MENÜ İŞLEMLERİ */}
-
                     <div className="space-y-2 border-t border-amber-100 p-2">
                       <Link
                         to="/profile"
@@ -152,8 +150,7 @@ function Navbar() {
             </div>
           ) : (
             /* GİRİŞ YAPILMAMIŞSA */
-
-            <div className="flex items-center rounded-full bg-[#461901] px-5 py-3 shadow-md shadow-amber-950/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="flex w-full items-center justify-center rounded-full bg-[#461901] px-4 py-3 shadow-md shadow-amber-950/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg sm:w-auto sm:px-5">
               <img
                 src="/girisyapkaydolicon.svg"
                 alt=""
