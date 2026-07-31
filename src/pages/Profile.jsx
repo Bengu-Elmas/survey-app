@@ -6,7 +6,8 @@ import FeedbackModal from "../components/FeedbackModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function Profile() {
-  const { currentUser, userProfile, updateAccountProfile } = useAuth();
+  const { currentUser, userProfile, updateAccountProfile, changePassword } =
+    useAuth();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -15,6 +16,17 @@ function Profile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+
+  const [passwordCurrent, setPasswordCurrent] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  const [showPasswordCurrent, setShowPasswordCurrent] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const [feedback, setFeedback] = useState({
     isOpen: false,
@@ -70,6 +82,110 @@ function Profile() {
       ...currentFeedback,
       isOpen: false,
     }));
+  }
+  async function handleChangePassword() {
+    if (isChangingPassword) {
+      return;
+    }
+
+    if (
+      passwordCurrent.trim() === "" ||
+      newPassword.trim() === "" ||
+      confirmNewPassword.trim() === ""
+    ) {
+      showFeedback(
+        "warning",
+        "Eksik bilgiler var",
+        "Şifrenizi değiştirmek için tüm şifre alanlarını doldurmalısınız.",
+      );
+
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      showFeedback(
+        "warning",
+        "Şifreler eşleşmiyor",
+        "Yeni şifre ve yeni şifre tekrar alanları aynı olmalıdır.",
+      );
+
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showFeedback(
+        "warning",
+        "Şifre çok kısa",
+        "Yeni şifreniz en az 6 karakter olmalıdır.",
+      );
+
+      return;
+    }
+
+    if (passwordCurrent === newPassword) {
+      showFeedback(
+        "warning",
+        "Yeni bir şifre belirleyin",
+        "Yeni şifreniz mevcut şifrenizle aynı olmamalıdır.",
+      );
+
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+
+      await changePassword(passwordCurrent, newPassword);
+
+      setPasswordCurrent("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+
+      setShowPasswordCurrent(false);
+      setShowNewPassword(false);
+      setShowConfirmNewPassword(false);
+
+      setShowPasswordSection(false);
+
+      showFeedback(
+        "success",
+        "Şifreniz güncellendi!",
+        "Yeni şifreniz başarıyla kaydedildi.",
+      );
+    } catch (error) {
+      console.error("Şifre değiştirilirken hata oluştu:", error);
+
+      if (
+        error.code === "auth/wrong-password" ||
+        error.code === "auth/invalid-credential"
+      ) {
+        showFeedback(
+          "error",
+          "Mevcut şifre yanlış",
+          "Yazdığınız mevcut şifre doğru değil. Lütfen tekrar deneyin.",
+        );
+      } else if (error.code === "auth/weak-password") {
+        showFeedback(
+          "error",
+          "Şifre yeterince güçlü değil",
+          "Lütfen daha güçlü bir şifre belirleyin.",
+        );
+      } else if (error.code === "auth/too-many-requests") {
+        showFeedback(
+          "error",
+          "Çok fazla deneme yapıldı",
+          "Güvenlik nedeniyle işlem geçici olarak sınırlandırıldı. Lütfen daha sonra tekrar deneyin.",
+        );
+      } else {
+        showFeedback(
+          "error",
+          "Şifre güncellenemedi",
+          "Şifreniz değiştirilirken beklenmeyen bir hata oluştu.",
+        );
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -405,6 +521,185 @@ function Profile() {
                   </div>
                 )}
 
+                {/* ŞİFRE DEĞİŞTİR */}
+
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  className="w-full rounded-xl bg-amber-100 px-5 py-4 font-semibold text-amber-900 transition duration-300 hover:bg-amber-200"
+                >
+                  {showPasswordSection
+                    ? "ŞİFRE DEĞİŞTİRMEYİ KAPAT"
+                    : "ŞİFREMİ DEĞİŞTİR"}
+                </button>
+
+                {showPasswordSection && (
+                  <div className="rounded-2xl bg-amber-50 p-5">
+                    <p className="font-stack-notch text-lg font-bold text-amber-950">
+                      Şifreni Değiştir
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-amber-800">
+                      Güvenliğin için mevcut şifreni doğruladıktan sonra yeni
+                      bir şifre belirleyebilirsin.
+                    </p>
+
+                    <div className="mt-5 space-y-4">
+                      {/* MEVCUT ŞİFRE */}
+
+                      <div>
+                        <label
+                          htmlFor="password-current"
+                          className="font-stack-notch mb-2 block text-sm font-bold text-amber-950"
+                        >
+                          MEVCUT ŞİFRE
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            id="password-current"
+                            type={showPasswordCurrent ? "text" : "password"}
+                            value={passwordCurrent}
+                            onChange={(event) =>
+                              setPasswordCurrent(event.target.value)
+                            }
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                            className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3.5 pr-12 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowPasswordCurrent(!showPasswordCurrent)
+                            }
+                            aria-label={
+                              showPasswordCurrent
+                                ? "Şifreyi gizle"
+                                : "Şifreyi göster"
+                            }
+                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg transition hover:bg-amber-100"
+                          >
+                            <img
+                              src={
+                                showPasswordCurrent
+                                  ? "/sifre-acik.svg"
+                                  : "/sifre-gizli.svg"
+                              }
+                              alt=""
+                              className="h-6 w-6"
+                            />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* YENİ ŞİFRE */}
+
+                      <div>
+                        <label
+                          htmlFor="new-password"
+                          className="font-stack-notch mb-2 block text-sm font-bold text-amber-950"
+                        >
+                          YENİ ŞİFRE
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            id="new-password"
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(event) =>
+                              setNewPassword(event.target.value)
+                            }
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3.5 pr-12 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={
+                              showNewPassword
+                                ? "Şifreyi gizle"
+                                : "Şifreyi göster"
+                            }
+                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg transition hover:bg-amber-100"
+                          >
+                            <img
+                              src={
+                                showNewPassword
+                                  ? "/sifre-acik.svg"
+                                  : "/sifre-gizli.svg"
+                              }
+                              alt=""
+                              className="h-6 w-6"
+                            />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* YENİ ŞİFRE TEKRAR */}
+
+                      <div>
+                        <label
+                          htmlFor="confirm-new-password"
+                          className="font-stack-notch mb-2 block text-sm font-bold text-amber-950"
+                        >
+                          YENİ ŞİFRE TEKRAR
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            id="confirm-new-password"
+                            type={showConfirmNewPassword ? "text" : "password"}
+                            value={confirmNewPassword}
+                            onChange={(event) =>
+                              setConfirmNewPassword(event.target.value)
+                            }
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3.5 pr-12 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmNewPassword(!showConfirmNewPassword)
+                            }
+                            aria-label={
+                              showConfirmNewPassword
+                                ? "Şifreyi gizle"
+                                : "Şifreyi göster"
+                            }
+                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg transition hover:bg-amber-100"
+                          >
+                            <img
+                              src={
+                                showConfirmNewPassword
+                                  ? "/sifre-acik.svg"
+                                  : "/sifre-gizli.svg"
+                              }
+                              alt=""
+                              className="h-6 w-6"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleChangePassword}
+                      disabled={isChangingPassword}
+                      className="mt-5 w-full rounded-xl bg-amber-800 px-5 py-3.5 font-semibold text-white shadow-md shadow-amber-300/40 transition duration-300 hover:scale-[1.01] hover:bg-amber-900 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isChangingPassword
+                        ? "ŞİFRE GÜNCELLENİYOR..."
+                        : "ŞİFREYİ GÜNCELLE"}
+                    </button>
+                  </div>
+                )}
+
                 {/* KAYDET */}
 
                 <button
@@ -417,7 +712,7 @@ function Profile() {
                     : "DEĞİŞİKLİKLERİ KAYDET"}
                 </button>
 
-                <p className="text-center text-xs font-medium leading-5 text-slate-500">
+                <p className="text-center text-xs font-medium leading-5 text-slate-900">
                   Yaptığın değişiklikler hesabına ve Survey App profil
                   bilgilerine uygulanır.
                 </p>

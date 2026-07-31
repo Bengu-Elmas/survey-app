@@ -10,6 +10,7 @@ import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Profile from "./pages/Profile.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 function App() {
   const location = useLocation();
@@ -18,7 +19,8 @@ function App() {
     location.pathname.startsWith("/thank-you/") ||
     location.pathname === "/register" ||
     location.pathname === "/login" ||
-    location.pathname === "/profile";
+    location.pathname === "/profile" ||
+    location.pathname === "/forgot-password";
   return (
     <>
       {!hideNavbar && <Navbar />}
@@ -64,6 +66,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </>
   );

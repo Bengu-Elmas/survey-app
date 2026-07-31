@@ -6,10 +6,12 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reload,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
   verifyBeforeUpdateEmail,
+  updatePassword,
 } from "firebase/auth";
 
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -173,6 +175,54 @@ export function AuthProvider({ children }) {
     );
 
     return userCredential.user;
+  }
+
+  /* ŞİFRE SIFIRLAMA E-POSTASI GÖNDER */
+
+  async function resetPassword(email) {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      const error = new Error("E-posta adresi gereklidir.");
+
+      error.code = "auth/email-required";
+
+      throw error;
+    }
+
+    /*
+      Firebase tarafından gönderilen e-postanın
+      dilini Türkçe olarak ayarlıyoruz.
+    */
+
+    auth.languageCode = "tr";
+
+    await sendPasswordResetEmail(auth, cleanEmail);
+  }
+
+  /* GİRİŞ YAPMIŞ KULLANICININ ŞİFRESİNİ DEĞİŞTİR */
+
+  async function changePassword(currentPassword, newPassword) {
+    const user = auth.currentUser;
+
+    if (!user || !user.email) {
+      const error = new Error("Kullanıcı bilgisi bulunamadı.");
+
+      error.code = "password/user-not-found";
+
+      throw error;
+    }
+
+    const credential = EmailAuthProvider.credential(
+      user.email,
+      currentPassword,
+    );
+
+    // Önce mevcut şifreyi doğruluyoruz.
+    await reauthenticateWithCredential(user, credential);
+
+    // Doğrulama başarılıysa yeni şifreyi kaydediyoruz.
+    await updatePassword(user, newPassword);
   }
 
   /* PROFİL BİLGİLERİNİ GÜNCELLE */
@@ -346,7 +396,9 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    resetPassword,
     updateAccountProfile,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

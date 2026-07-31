@@ -10,7 +10,9 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
+
   const { login } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,6 +85,7 @@ function Login() {
       setIsSubmitting(false);
     }
   }
+
   function showFeedback(type, title, message) {
     setFeedback({
       isOpen: true,
@@ -108,10 +111,11 @@ function Login() {
         message={feedback.message}
         onClose={closeFeedback}
       />
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-amber-950 via-amber-700 to-amber-500 px-6 py-10">
+
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-amber-950 via-amber-700 to-amber-500 px-4 py-10 sm:px-6">
         <AuthBackground />
 
-        <div className="relative z-10 w-full max-w-lg rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-8 shadow-xl shadow-amber-950/20">
+        <div className="relative z-10 w-full max-w-lg rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-6 shadow-xl shadow-amber-950/20 sm:p-8">
           {/* İKON */}
 
           <div className="text-center">
@@ -154,6 +158,7 @@ function Login() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="ornek@mail.com"
+                autoComplete="email"
                 className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </div>
@@ -161,12 +166,21 @@ function Login() {
             {/* ŞİFRE */}
 
             <div>
-              <label
-                htmlFor="password"
-                className="font-stack-notch mb-2 block text-sm font-bold text-amber-950"
-              >
-                ŞİFRE
-              </label>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label
+                  htmlFor="password"
+                  className="font-stack-notch block text-sm font-bold text-amber-950"
+                >
+                  ŞİFRE
+                </label>
+
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-bold text-amber-700 transition hover:text-amber-950"
+                >
+                  ŞİFREMİ UNUTTUM ?
+                </Link>
+              </div>
 
               <div className="relative">
                 <input
@@ -175,6 +189,7 @@ function Login() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                 />
 
