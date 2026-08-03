@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
 import {
   collection,
   deleteDoc,
@@ -16,9 +15,10 @@ import FeedbackModal from "../components/FeedbackModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import GuestHome from "../components/GuestHome.jsx";
 import Footer from "../components/Footer.jsx";
+import SurveyAccessModal from "../components/SurveyAccessModal.jsx";
 
 function Dashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser, authLoading } = useAuth();
 
   const [surveyDocuments, setSurveyDocuments] = useState([]);
   const [responses, setResponses] = useState([]);
@@ -28,6 +28,8 @@ function Dashboard() {
 
   const [surveyToDelete, setSurveyToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [surveyToManage, setSurveyToManage] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("created-desc");
@@ -77,18 +79,24 @@ function Dashboard() {
   /* FIRESTORE'DAN ANKETLERİ DİNLE */
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     if (!currentUser) {
       setSurveyDocuments([]);
       setSurveysLoaded(true);
       return;
     }
 
+    console.log("Dashboard kullanıcı UID:", currentUser.uid);
+
     setSurveyDocuments([]);
     setSurveysLoaded(false);
 
     const surveysQuery = query(
       collection(db, "surveys"),
-      where("ownerId", "==", currentUser.uid),
+      where("memberIds", "array-contains", currentUser.uid),
     );
 
     const unsubscribeSurveys = onSnapshot(
@@ -100,12 +108,20 @@ function Dashboard() {
           ...surveyDoc.data(),
         }));
 
+        console.log("Dashboard'a gelen anket sayısı:", surveyList.length);
+
         setSurveyDocuments(surveyList);
         setSurveysLoaded(true);
       },
 
       (error) => {
-        console.error("Anketler alınırken hata oluştu:", error);
+        console.error("Anketler alınırken hata oluştu:", {
+          code: error.code,
+          message: error.message,
+          uid: currentUser.uid,
+        });
+
+        setSurveyDocuments([]);
         setSurveysLoaded(true);
       },
     );
@@ -113,12 +129,22 @@ function Dashboard() {
     return () => {
       unsubscribeSurveys();
     };
-  }, [currentUser]);
+  }, [currentUser, authLoading]);
 
-  /* FIRESTORE'DAN KULLANICININ YANITLARINI DİNLE */
+  /* ERİŞİLEBİLEN HER ANKETİN YANITLARINI AYRI AYRI DİNLE */
 
   useEffect(() => {
+    if (authLoading || !surveysLoaded) {
+      return;
+    }
+
     if (!currentUser) {
+      setResponses([]);
+      setResponsesLoaded(true);
+      return;
+    }
+
+    if (surveyDocuments.length === 0) {
       setResponses([]);
       setResponsesLoaded(true);
       return;
@@ -127,41 +153,95 @@ function Dashboard() {
     setResponses([]);
     setResponsesLoaded(false);
 
-    const responsesQuery = query(
-      collection(db, "responses"),
-      where("surveyOwnerId", "==", currentUser.uid),
-    );
+    const responsesBySurvey = new Map();
+    const loadedSurveyIds = new Set();
+    let isActive = true;
+    let responseErrorShown = false;
 
-    const unsubscribeResponses = onSnapshot(
-      responsesQuery,
+    function updateCombinedResponses() {
+      if (!isActive) {
+        return;
+      }
 
-      (snapshot) => {
-        const responseList = snapshot.docs.map((responseDoc) => ({
-          id: responseDoc.id,
-          ...responseDoc.data(),
-        }));
+      const combinedResponses = Array.from(responsesBySurvey.values()).flat();
 
-        setResponses(responseList);
+      setResponses(combinedResponses);
+
+      if (loadedSurveyIds.size === surveyDocuments.length) {
         setResponsesLoaded(true);
-      },
+      }
+    }
 
-      (error) => {
-        console.error("Yanıtlar alınırken hata oluştu:", error);
+    const unsubscribeResponses = surveyDocuments.map((survey) => {
+      /*
+        Güvenlik kuralı yanıt okurken response içindeki surveyId üzerinden
+        ilgili ankette owner/editor/viewer olup olmadığımızı kontrol ediyor.
+        Bu nedenle yanıtları surveyOwnerId yerine her anketin surveyId'siyle
+        ayrı ayrı sorguluyoruz.
+      */
+      const responsesQuery = query(
+        collection(db, "responses"),
+        where("surveyId", "==", survey.id),
+      );
 
-        setResponsesLoaded(true);
+      return onSnapshot(
+        responsesQuery,
 
-        showFeedback(
-          "error",
-          "Yanıtlar yüklenemedi",
-          "Anket yanıtları alınırken bir hata oluştu. Lütfen tekrar deneyin.",
-        );
-      },
-    );
+        (snapshot) => {
+          if (!isActive) {
+            return;
+          }
+
+          const responseList = snapshot.docs.map((responseDoc) => ({
+            id: responseDoc.id,
+            ...responseDoc.data(),
+          }));
+
+          responsesBySurvey.set(survey.id, responseList);
+          loadedSurveyIds.add(survey.id);
+          updateCombinedResponses();
+        },
+
+        (error) => {
+          if (!isActive) {
+            return;
+          }
+
+          console.error(
+            `“${survey.title || survey.id}” anketinin yanıtları alınırken hata oluştu:`,
+            {
+              code: error.code,
+              message: error.message,
+              surveyId: survey.id,
+              uid: currentUser.uid,
+            },
+          );
+
+          responsesBySurvey.set(survey.id, []);
+          loadedSurveyIds.add(survey.id);
+          updateCombinedResponses();
+
+          if (!responseErrorShown) {
+            responseErrorShown = true;
+
+            setFeedback({
+              isOpen: true,
+              type: "error",
+              title: "Yanıtlar yüklenemedi",
+              message:
+                "Bazı anket yanıtları alınırken bir yetki hatası oluştu. Konsoldaki ayrıntıları kontrol edebilirsin.",
+              mode: "message",
+            });
+          }
+        },
+      );
+    });
 
     return () => {
-      unsubscribeResponses();
+      isActive = false;
+      unsubscribeResponses.forEach((unsubscribe) => unsubscribe());
     };
-  }, [currentUser]);
+  }, [currentUser, authLoading, surveysLoaded, surveyDocuments]);
 
   /* TARİHİ SIRALAMADA KULLANILABİLECEK SAYIYA ÇEVİR */
 
@@ -351,6 +431,10 @@ function Dashboard() {
     );
   }
 
+  function handleManageAccess(survey) {
+    setSurveyToManage(survey);
+  }
+
   /* ANKETİ VE ANKETE AİT YANITLARI SİL */
 
   async function confirmDelete() {
@@ -452,6 +536,13 @@ function Dashboard() {
         isLoading={isDeleting}
         danger={feedback.mode === "confirm"}
       />
+
+      {surveyToManage && (
+        <SurveyAccessModal
+          survey={surveyToManage}
+          onClose={() => setSurveyToManage(null)}
+        />
+      )}
 
       <main className="min-h-screen bg-slate-100 px-3 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-6xl">
@@ -634,6 +725,7 @@ function Dashboard() {
                     survey={survey}
                     onShare={handleShare}
                     onDelete={handleDelete}
+                    onManageAccess={handleManageAccess}
                   />
                 ))}
               </div>

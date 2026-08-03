@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
-function SurveyCard({ survey, onShare, onDelete }) {
+function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
+  const { currentUser } = useAuth();
+
+  /* KULLANICININ BU ANKETTEKİ ROLÜ */
+
+  const userRole = currentUser
+    ? survey.members?.[currentUser.uid] ||
+      (survey.ownerId === currentUser.uid ? "owner" : null)
+    : null;
+
   function getStatusClasses(status) {
     if (status === "Yayında") {
       return "bg-green-100 text-green-700";
@@ -20,6 +30,36 @@ function SurveyCard({ survey, onShare, onDelete }) {
 
     if (status === "Taslak") {
       return "/taslak-logo.svg";
+    }
+
+    return null;
+  }
+
+  /* ROL BİLGİLERİ */
+
+  function getRoleInfo(role) {
+    if (role === "owner") {
+      return {
+        label: "Sahip",
+        icon: "/ownericon.svg",
+        classes: "border-amber-300 bg-amber-100 text-amber-950",
+      };
+    }
+
+    if (role === "editor") {
+      return {
+        label: "Editör",
+        icon: "/editoricon.svg",
+        classes: "border-orange-300 bg-orange-100 text-orange-900",
+      };
+    }
+
+    if (role === "viewer") {
+      return {
+        label: "Görüntüleyici",
+        icon: "/viewericon.svg",
+        classes: "border-slate-300 bg-slate-100 text-slate-800",
+      };
     }
 
     return null;
@@ -53,6 +93,8 @@ function SurveyCard({ survey, onShare, onDelete }) {
     });
   }
 
+  const roleInfo = getRoleInfo(userRole);
+
   return (
     <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
       {/* BAŞLIK */}
@@ -68,21 +110,35 @@ function SurveyCard({ survey, onShare, onDelete }) {
           </p>
         </div>
 
-        <span
-          className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold leading-none ${getStatusClasses(
-            survey.status,
-          )}`}
-        >
-          {getStatusIcon(survey.status) && (
-            <img
-              src={getStatusIcon(survey.status)}
-              alt=""
-              className="h-8 w-8 shrink-0"
-            />
+        {/* ROL + ANKET DURUMU */}
+
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {roleInfo && (
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold ${roleInfo.classes}`}
+            >
+              <img src={roleInfo.icon} alt="" className="h-7 w-7 shrink-0" />
+
+              <span>{roleInfo.label}</span>
+            </span>
           )}
 
-          <span className="leading-none">{survey.status}</span>
-        </span>
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold leading-none ${getStatusClasses(
+              survey.status,
+            )}`}
+          >
+            {getStatusIcon(survey.status) && (
+              <img
+                src={getStatusIcon(survey.status)}
+                alt=""
+                className="h-8 w-8 shrink-0"
+              />
+            )}
+
+            <span className="leading-none">{survey.status}</span>
+          </span>
+        </div>
       </div>
 
       {/* İSTATİSTİKLER */}
@@ -131,9 +187,22 @@ function SurveyCard({ survey, onShare, onDelete }) {
         </p>
       </div>
 
-      {/* BUTONLAR */}
+      {/* AKSİYON BUTONLARI */}
 
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        {/* SADECE OWNER GÖREBİLİR */}
+
+        {userRole === "owner" && (
+          <button
+            type="button"
+            onClick={() => onManageAccess(survey)}
+            className="flex h-10 items-center gap-2 rounded-lg border border-amber-300 bg-amber-100 px-3 text-sm font-semibold text-amber-900 transition duration-300 hover:bg-amber-200"
+          >
+            <img src="/ownericon.svg" alt="" className="h-5 w-5" />
+            Yetkilendir
+          </button>
+        )}
+
         <Link
           to={`/edit/${survey.id}`}
           className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-300 hover:bg-amber-800"

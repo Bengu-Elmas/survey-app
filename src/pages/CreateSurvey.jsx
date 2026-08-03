@@ -298,6 +298,12 @@ function CreateSurvey() {
       completionRate: 0,
       questions,
       ownerId: currentUser.uid,
+
+      members: {
+        [currentUser.uid]: "owner",
+      },
+
+      memberIds: [currentUser.uid],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -368,6 +374,13 @@ function CreateSurvey() {
       completionRate: 0,
       questions,
       ownerId: currentUser.uid,
+
+      members: {
+        [currentUser.uid]: "owner",
+      },
+
+      memberIds: [currentUser.uid],
+
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
