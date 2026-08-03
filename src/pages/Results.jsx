@@ -50,7 +50,7 @@ function DistributionTooltip({ active, payload }) {
 
 function Results() {
   const { surveyId } = useParams();
-  const { currentUser } = useAuth();
+  const { currentUser, authLoading, isAdmin } = useAuth();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [responses, setResponses] = useState([]);
@@ -82,8 +82,19 @@ function Results() {
           ...surveySnapshot.data(),
         };
 
-        // Anket giriş yapan kullanıcıya ait mi?
-        if (surveyData.ownerId !== currentUser.uid) {
+        // Kullanıcının bu anketteki rolünü belirler.
+        const currentUserRole =
+          surveyData.members?.[currentUser.uid] ||
+          (surveyData.ownerId === currentUser.uid ? "owner" : null);
+
+        // Sahip, editör, görüntüleyici ve admin sonuçları görebilir.
+        const canViewResults =
+          isAdmin ||
+          currentUserRole === "owner" ||
+          currentUserRole === "editor" ||
+          currentUserRole === "viewer";
+
+        if (!canViewResults) {
           setAccessDenied(true);
           setSelectedSurvey(null);
           setResponses([]);
@@ -96,7 +107,6 @@ function Results() {
         const responsesQuery = query(
           collection(db, "responses"),
           where("surveyId", "==", surveyId),
-          where("surveyOwnerId", "==", currentUser.uid),
         );
 
         const responsesSnapshot = await getDocs(responsesQuery);
@@ -121,7 +131,7 @@ function Results() {
     if (currentUser) {
       fetchResults();
     }
-  }, [surveyId, currentUser]);
+  }, [surveyId, currentUser, authLoading, isAdmin]);
 
   function addPercentages(data) {
     const totalAnswers = data.reduce((total, item) => total + item.count, 0);
@@ -459,12 +469,12 @@ function Results() {
           </p>
 
           <h1 className="font-stack-notch mt-3 text-4xl font-extrabold text-amber-950 md:text-5xl">
-            BU ANKET SANA AİT DEĞİL !
+            BU ANKETİN SONUÇLARINI GÖRÜNTÜLEME YETKİN YOK
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-amber-900/70">
-            Yalnızca kendi oluşturduğun anketlerin sonuçlarını
-            görüntüleyebilirsin.
+            Bu anketin sonuçlarını yalnızca anket sahibi, yetkilendirilmiş
+            editörler, görüntüleyiciler ve admin hesabı görüntüleyebilir.
           </p>
 
           <Link

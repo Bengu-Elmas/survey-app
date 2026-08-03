@@ -118,6 +118,12 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
 
   const roleInfo = getRoleInfo(isAdmin ? "admin" : userRole);
   const statusIcon = getStatusIcon(survey.status);
+  const ownerName =
+    survey.ownerProfile?.fullName ||
+    survey.ownerProfile?.name ||
+    "İSİM BİLGİSİ BULUNAMADI";
+
+  const ownerEmail = survey.ownerProfile?.email || "E-POSTA BİLGİSİ BULUNAMADI";
 
   return (
     <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
@@ -160,6 +166,30 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
           </span>
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="mt-4 flex w-full items-center gap-4 rounded-xl border border-amber-200 bg-white/70 px-4 py-3 shadow-sm">
+          <img src="/ownericon.svg" alt="" className="h-11 w-11 shrink-0" />
+
+          <div className="min-w-0 flex-1">
+            <p className="font-stack-notch text-xs font-bold tracking-wide text-amber-700">
+              ANKET SAHİBİ
+            </p>
+
+            <div className="mt-1 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
+              <p className="truncate text-sm font-bold text-amber-950">
+                {ownerName}
+              </p>
+
+              <span className="hidden text-amber-400 sm:inline">•</span>
+
+              <p className="truncate text-sm font-medium text-slate-600">
+                {ownerEmail}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* İSTATİSTİKLER */}
 

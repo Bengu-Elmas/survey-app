@@ -23,6 +23,9 @@ function Dashboard() {
   const [surveyDocuments, setSurveyDocuments] = useState([]);
   const [responses, setResponses] = useState([]);
 
+  const [usersById, setUsersById] = useState({});
+  const [usersLoaded, setUsersLoaded] = useState(false);
+
   const [surveysLoaded, setSurveysLoaded] = useState(false);
   const [responsesLoaded, setResponsesLoaded] = useState(false);
 
@@ -133,6 +136,51 @@ function Dashboard() {
 
     return () => {
       unsubscribeSurveys();
+    };
+  }, [currentUser, authLoading, isAdmin]);
+
+  /* ADMIN İÇİN KULLANICI PROFİLLERİNİ DİNLE */
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!currentUser || !isAdmin) {
+      setUsersById({});
+      setUsersLoaded(true);
+      return;
+    }
+
+    setUsersLoaded(false);
+
+    const unsubscribeUsers = onSnapshot(
+      collection(db, "users"),
+
+      (snapshot) => {
+        const userMap = {};
+
+        snapshot.docs.forEach((userDoc) => {
+          userMap[userDoc.id] = {
+            id: userDoc.id,
+            ...userDoc.data(),
+          };
+        });
+
+        setUsersById(userMap);
+        setUsersLoaded(true);
+      },
+
+      (error) => {
+        console.error("Kullanıcı profilleri alınırken hata oluştu:", error);
+
+        setUsersById({});
+        setUsersLoaded(true);
+      },
+    );
+
+    return () => {
+      unsubscribeUsers();
     };
   }, [currentUser, authLoading, isAdmin]);
 
@@ -331,6 +379,8 @@ function Dashboard() {
           return {
             ...survey,
 
+            ownerProfile: isAdmin ? usersById[survey.ownerId] || null : null,
+
             questionCount:
               survey.questions?.length ?? survey.questionCount ?? 0,
 
@@ -518,7 +568,8 @@ function Dashboard() {
     }
   }
 
-  const loading = !surveysLoaded || !responsesLoaded;
+  const loading =
+    !surveysLoaded || !responsesLoaded || (isAdmin && !usersLoaded);
 
   if (!currentUser) {
     return <GuestHome />;
