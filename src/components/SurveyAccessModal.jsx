@@ -18,7 +18,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import FeedbackModal from "./FeedbackModal.jsx";
 
 function SurveyAccessModal({ survey, onClose }) {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
 
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("editor");
@@ -257,7 +257,11 @@ function SurveyAccessModal({ survey, onClose }) {
   }
 
   function canCurrentUserManageAccess() {
-    return currentUser && liveSurvey && liveSurvey.ownerId === currentUser.uid;
+    return Boolean(
+      currentUser &&
+      liveSurvey &&
+      (isAdmin || liveSurvey.ownerId === currentUser.uid),
+    );
   }
 
   /* KULLANICIYI YETKİLENDİR */
@@ -295,7 +299,7 @@ function SurveyAccessModal({ survey, onClose }) {
       showFeedback(
         "error",
         "YETKİN BULUNMUYOR",
-        "Bu anketin erişim ayarlarını yalnızca anket sahibi değiştirebilir.",
+        "Bu anketin erişim ayarlarını yalnızca anket sahibi veya admin değiştirebilir.",
       );
 
       return;
@@ -351,7 +355,7 @@ function SurveyAccessModal({ survey, onClose }) {
 
         const surveyData = surveySnapshot.data();
 
-        if (surveyData.ownerId !== currentUser.uid) {
+        if (surveyData.ownerId !== currentUser.uid && !isAdmin) {
           throw new Error("Bu işlem için yetkiniz bulunmuyor.");
         }
 
@@ -409,7 +413,7 @@ function SurveyAccessModal({ survey, onClose }) {
       showFeedback(
         "error",
         "Yetkin bulunmuyor",
-        "Rolleri yalnızca anket sahibi değiştirebilir.",
+        "Rolleri yalnızca anket sahibi veya admin değiştirebilir.",
       );
 
       return;
@@ -442,7 +446,7 @@ function SurveyAccessModal({ survey, onClose }) {
 
         const surveyData = surveySnapshot.data();
 
-        if (surveyData.ownerId !== currentUser.uid) {
+        if (surveyData.ownerId !== currentUser.uid && !isAdmin) {
           throw new Error("Bu işlem için yetkiniz bulunmuyor.");
         }
 
@@ -500,7 +504,7 @@ function SurveyAccessModal({ survey, onClose }) {
       showFeedback(
         "error",
         "Yetkin bulunmuyor",
-        "Kullanıcı erişimini yalnızca anket sahibi kaldırabilir.",
+        "Kullanıcı erişimini yalnızca anket sahibi veya admin kaldırabilir.",
       );
 
       return;
@@ -555,7 +559,7 @@ function SurveyAccessModal({ survey, onClose }) {
 
         const surveyData = surveySnapshot.data();
 
-        if (surveyData.ownerId !== currentUser.uid) {
+        if (surveyData.ownerId !== currentUser.uid && !isAdmin) {
           throw new Error("Bu işlem için yetkiniz bulunmuyor.");
         }
 
@@ -648,7 +652,7 @@ function SurveyAccessModal({ survey, onClose }) {
           <div className="flex items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
               <p className="font-stack-notch text-sm font-bold text-amber-700 sm:text-base">
-                ERİŞİM YÖNETİMİ
+                {isAdmin ? "ADMIN ERİŞİM YÖNETİMİ" : "ERİŞİM YÖNETİMİ"}
               </p>
 
               <h2 className="font-stack-notch mt-1 text-xl font-bold leading-tight text-amber-950 sm:text-2xl">
@@ -782,6 +786,7 @@ function SurveyAccessModal({ survey, onClose }) {
             <p className="mt-1.5 text-sm font-medium leading-5 text-slate-700">
               Anket sahibinin rolü değiştirilemez. Diğer kullanıcıların rolünü
               aşağıdan değiştirebilir veya erişimini kaldırabilirsin.
+              {isAdmin && " Bu işlemleri admin yetkisiyle gerçekleştiriyorsun."}
             </p>
 
             {membersLoading ? (

@@ -389,9 +389,12 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  const isAdmin = userProfile?.role === "admin";
+
   const value = {
     currentUser,
     userProfile,
+    isAdmin,
     authLoading,
     register,
     login,

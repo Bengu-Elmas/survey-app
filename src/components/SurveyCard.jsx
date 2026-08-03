@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
 
   /* KULLANICININ BU ANKETTEKİ ROLÜ */
 
@@ -13,16 +13,19 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
 
   /* ROL BAZLI YETKİLER */
 
-  const canManageAccess = userRole === "owner";
+  const canManageAccess = isAdmin || userRole === "owner";
 
-  const canEdit = userRole === "owner" || userRole === "editor";
+  const canEdit = isAdmin || userRole === "owner" || userRole === "editor";
 
   const canViewResults =
-    userRole === "owner" || userRole === "editor" || userRole === "viewer";
+    isAdmin ||
+    userRole === "owner" ||
+    userRole === "editor" ||
+    userRole === "viewer";
 
-  const canShare = userRole === "owner" || userRole === "editor";
+  const canShare = isAdmin || userRole === "owner" || userRole === "editor";
 
-  const canDelete = userRole === "owner";
+  const canDelete = isAdmin || userRole === "owner";
 
   function getStatusClasses(status) {
     if (status === "Yayında") {
@@ -48,9 +51,16 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
     return null;
   }
 
-  /* ROL BİLGİLERİ */
-
   function getRoleInfo(role) {
+    if (role === "admin") {
+      return {
+        label: "Admin Yetkisi",
+        icon: "/adminicon.svg",
+        classes:
+          "border-amber-500 bg-gradient-to-r from-amber-200 to-amber-100 text-amber-950",
+      };
+    }
+
     if (role === "owner") {
       return {
         label: "Sahip",
@@ -106,7 +116,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
     });
   }
 
-  const roleInfo = getRoleInfo(userRole);
+  const roleInfo = getRoleInfo(isAdmin ? "admin" : userRole);
   const statusIcon = getStatusIcon(survey.status);
 
   return (
@@ -200,7 +210,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
       {/* AKSİYON BUTONLARI */}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        {/* SADECE OWNER */}
+        {/* OWNER VE ADMIN */}
 
         {canManageAccess && (
           <button
@@ -208,13 +218,17 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
             onClick={() => onManageAccess?.(survey)}
             className="flex h-10 items-center gap-2 rounded-lg border border-amber-300 bg-amber-100 px-3 text-sm font-semibold text-amber-900 transition duration-300 hover:bg-amber-200"
           >
-            <img src="/ownericon.svg" alt="" className="h-5 w-5" />
+            <img
+              src={isAdmin ? "/adminicon.svg" : "/ownericon.svg"}
+              alt=""
+              className="h-5 w-5"
+            />
 
             <span>Yetkilendir</span>
           </button>
         )}
 
-        {/* OWNER VE EDITOR */}
+        {/* OWNER, EDITOR VE ADMIN */}
 
         {canEdit && (
           <Link
@@ -225,7 +239,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
           </Link>
         )}
 
-        {/* OWNER, EDITOR VE VIEWER */}
+        {/* OWNER, EDITOR, VIEWER VE ADMIN */}
 
         {canViewResults && (
           <Link
@@ -236,7 +250,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
           </Link>
         )}
 
-        {/* OWNER VE EDITOR */}
+        {/* OWNER, EDITOR VE ADMIN */}
 
         {canShare && (
           <button
@@ -266,7 +280,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
           </button>
         )}
 
-        {/* SADECE OWNER */}
+        {/* OWNER VE ADMIN */}
 
         {canDelete && (
           <button

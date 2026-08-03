@@ -18,7 +18,7 @@ import Footer from "../components/Footer.jsx";
 import SurveyAccessModal from "../components/SurveyAccessModal.jsx";
 
 function Dashboard() {
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, authLoading, isAdmin } = useAuth();
 
   const [surveyDocuments, setSurveyDocuments] = useState([]);
   const [responses, setResponses] = useState([]);
@@ -89,15 +89,20 @@ function Dashboard() {
       return;
     }
 
-    console.log("Dashboard kullanıcı UID:", currentUser.uid);
+    console.log("Dashboard kullanıcı bilgisi:", {
+      uid: currentUser.uid,
+      isAdmin,
+    });
 
     setSurveyDocuments([]);
     setSurveysLoaded(false);
 
-    const surveysQuery = query(
-      collection(db, "surveys"),
-      where("memberIds", "array-contains", currentUser.uid),
-    );
+    const surveysQuery = isAdmin
+      ? query(collection(db, "surveys"))
+      : query(
+          collection(db, "surveys"),
+          where("memberIds", "array-contains", currentUser.uid),
+        );
 
     const unsubscribeSurveys = onSnapshot(
       surveysQuery,
@@ -129,7 +134,7 @@ function Dashboard() {
     return () => {
       unsubscribeSurveys();
     };
-  }, [currentUser, authLoading]);
+  }, [currentUser, authLoading, isAdmin]);
 
   /* ERİŞİLEBİLEN HER ANKETİN YANITLARINI AYRI AYRI DİNLE */
 
@@ -552,16 +557,19 @@ function Dashboard() {
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold text-amber-100">
-                  DASHBOARD
+                  {isAdmin ? "ADMIN PANELİ" : "DASHBOARD"}
                 </p>
 
                 <h1 className="font-stack-notch mt-2 text-3xl font-bold md:text-4xl">
-                  Anketlerini tek yerden yönet
+                  {isAdmin
+                    ? "Tüm kullanıcı anketlerini yönet"
+                    : "Anketlerini tek yerden yönet"}
                 </h1>
 
                 <p className="mt-4 leading-7 text-amber-50">
-                  Anketlerini oluştur, düzenle ve katılımcılardan gelen
-                  yanıtları kolayca takip et.
+                  {isAdmin
+                    ? "Sistemdeki bütün kullanıcı anketlerini, yanıtlarını ve erişim yetkilerini tek bir panel üzerinden takip et."
+                    : "Anketlerini oluştur, düzenle ve katılımcılardan gelen yanıtları kolayca takip et."}
                 </p>
               </div>
 
@@ -629,11 +637,13 @@ function Dashboard() {
 
                 <div>
                   <h2 className="font-stack-notch text-2xl font-bold text-amber-950">
-                    Anketlerim
+                    {isAdmin ? "Kullanıcı Anketleri" : "Anketlerim"}
                   </h2>
 
                   <p className="mt-1 text-sm font-medium text-slate-700">
-                    Oluşturduğun tüm anketleri buradan yönetebilirsin.
+                    {isAdmin
+                      ? "Sistemdeki tüm kullanıcıların oluşturduğu anketleri buradan yönetebilirsin."
+                      : "Oluşturduğun tüm anketleri buradan yönetebilirsin."}
                   </p>
                 </div>
               </div>
@@ -665,36 +675,19 @@ function Dashboard() {
                   />
                 </div>
 
-                <div className="relative">
-                  <select
-                    value={sortOption}
-                    onChange={(event) => setSortOption(event.target.value)}
-                    aria-label="Anketleri sırala"
-                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-amber-300 bg-white py-2 pl-4 pr-12 text-sm font-semibold text-amber-950 shadow-sm outline-none transition duration-200 hover:border-amber-400 hover:bg-amber-50 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                  >
-                    <option value="created-desc">En yeni oluşturulan</option>
-                    <option value="created-asc">En eski oluşturulan</option>
-                    <option value="updated-desc">Son güncellenen</option>
-                    <option value="updated-asc">En eski güncellenen</option>
-                    <option value="title-asc">İsme göre A–Z</option>
-                    <option value="title-desc">İsme göre Z–A</option>
-                  </select>
-
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-800"
-                  >
-                    <path
-                      d="m7 10 5 5 5-5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+                <select
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value)}
+                  aria-label="Anketleri sırala"
+                  className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-semibold text-amber-900 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                >
+                  <option value="created-desc">En yeni oluşturulan</option>
+                  <option value="created-asc">En eski oluşturulan</option>
+                  <option value="updated-desc">Son güncellenen</option>
+                  <option value="updated-asc">En eski güncellenen</option>
+                  <option value="title-asc">İsme göre A–Z</option>
+                  <option value="title-desc">İsme göre Z–A</option>
+                </select>
               </div>
             </div>
 
@@ -709,11 +702,15 @@ function Dashboard() {
             ) : surveys.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-10 text-center">
                 <p className="font-stack-notch text-xl font-bold text-amber-950">
-                  Henüz anket bulunmuyor
+                  {isAdmin
+                    ? "Sistemde henüz anket bulunmuyor"
+                    : "Henüz anket bulunmuyor"}
                 </p>
 
                 <p className="mt-2 text-sm font-medium text-amber-800">
-                  İlk anketini oluşturarak başlayabilirsin.
+                  {isAdmin
+                    ? "Kullanıcılar anket oluşturduğunda burada görüntülenecek."
+                    : "İlk anketini oluşturarak başlayabilirsin."}
                 </p>
               </div>
             ) : filteredAndSortedSurveys.length === 0 ? (

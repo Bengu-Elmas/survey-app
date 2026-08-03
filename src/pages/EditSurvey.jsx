@@ -89,7 +89,7 @@ function SortableQuestion({ id, index, onDelete, children }) {
 function EditSurvey() {
   const { surveyId } = useParams();
   const navigate = useNavigate();
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, authLoading, isAdmin } = useAuth();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [pageStatus, setPageStatus] = useState("loading");
@@ -116,7 +116,7 @@ function EditSurvey() {
       : null;
 
   const canEditSurvey =
-    currentUserRole === "owner" || currentUserRole === "editor";
+    isAdmin || currentUserRole === "owner" || currentUserRole === "editor";
 
   function showFeedback(type, feedbackTitle, message) {
     setFeedback({
@@ -168,7 +168,9 @@ function EditSurvey() {
           (surveyData.ownerId === currentUser.uid ? "owner" : null);
 
         const canCurrentUserEdit =
-          fetchedUserRole === "owner" || fetchedUserRole === "editor";
+          isAdmin ||
+          fetchedUserRole === "owner" ||
+          fetchedUserRole === "editor";
 
         if (!canCurrentUserEdit) {
           setSelectedSurvey(null);
@@ -193,7 +195,7 @@ function EditSurvey() {
     }
 
     fetchSurvey();
-  }, [surveyId, currentUser, authLoading]);
+  }, [surveyId, currentUser, authLoading, isAdmin]);
 
   useEffect(() => {
     if (!selectedSurvey) {
@@ -380,8 +382,8 @@ function EditSurvey() {
     if (!canEditSurvey) {
       showFeedback(
         "error",
-        "Düzenleme yetkin bulunmuyor",
-        "Bu anketi yalnızca sahibi veya editör rolündeki kullanıcılar düzenleyebilir.",
+        "DÜZENLEME YETKİSİ BULUNMUYOR",
+        "Bu anketi yalnızca sahibi, editör rolündeki kullanıcılar veya admin düzenleyebilir.",
       );
       return;
     }
@@ -632,9 +634,28 @@ function EditSurvey() {
               Anket ID: {surveyId}
             </p>
 
-            <p className="mt-1 text-sm font-semibold text-amber-800">
-              Yetkin: {currentUserRole === "owner" ? "Sahip" : "Editör"}
-            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <img
+                src={
+                  isAdmin
+                    ? "/adminicon.svg"
+                    : currentUserRole === "owner"
+                      ? "/ownericon.svg"
+                      : "/editoricon.svg"
+                }
+                alt=""
+                className="h-7 w-7"
+              />
+
+              <p className="text-sm font-semibold text-amber-800">
+                Yetkin:{" "}
+                {isAdmin
+                  ? "Admin Yetkisi"
+                  : currentUserRole === "owner"
+                    ? "Sahip"
+                    : "Editör"}
+              </p>
+            </div>
           </div>
 
           <form
