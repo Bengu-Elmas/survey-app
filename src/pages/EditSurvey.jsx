@@ -89,7 +89,7 @@ function SortableQuestion({ id, index, onDelete, children }) {
 function EditSurvey() {
   const { surveyId } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, authLoading } = useAuth();
 
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [pageStatus, setPageStatus] = useState("loading");
@@ -106,6 +106,17 @@ function EditSurvey() {
     title: "",
     message: "",
   });
+
+  /* OTURUM AÇAN KULLANICININ BU ANKETTEKİ ROLÜ */
+
+  const currentUserRole =
+    currentUser && selectedSurvey
+      ? selectedSurvey.members?.[currentUser.uid] ||
+        (selectedSurvey.ownerId === currentUser.uid ? "owner" : null)
+      : null;
+
+  const canEditSurvey =
+    currentUserRole === "owner" || currentUserRole === "editor";
 
   function showFeedback(type, feedbackTitle, message) {
     setFeedback({
@@ -124,6 +135,16 @@ function EditSurvey() {
   }
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!currentUser) {
+      setSelectedSurvey(null);
+      setPageStatus("forbidden");
+      return;
+    }
+
     async function fetchSurvey() {
       try {
         setPageStatus("loading");
@@ -132,6 +153,7 @@ function EditSurvey() {
         const surveySnapshot = await getDoc(surveyRef);
 
         if (!surveySnapshot.exists()) {
+          setSelectedSurvey(null);
           setPageStatus("not-found");
           return;
         }
@@ -141,7 +163,15 @@ function EditSurvey() {
           ...surveySnapshot.data(),
         };
 
-        if (surveyData.ownerId !== currentUser.uid) {
+        const fetchedUserRole =
+          surveyData.members?.[currentUser.uid] ||
+          (surveyData.ownerId === currentUser.uid ? "owner" : null);
+
+        const canCurrentUserEdit =
+          fetchedUserRole === "owner" || fetchedUserRole === "editor";
+
+        if (!canCurrentUserEdit) {
+          setSelectedSurvey(null);
           setPageStatus("forbidden");
           return;
         }
@@ -150,14 +180,20 @@ function EditSurvey() {
         setPageStatus("ready");
       } catch (error) {
         console.error("Anket alınırken hata oluştu:", error);
-        setPageStatus("not-found");
+
+        setSelectedSurvey(null);
+
+        if (error.code === "permission-denied") {
+          setPageStatus("forbidden");
+          return;
+        }
+
+        setPageStatus("error");
       }
     }
 
-    if (currentUser) {
-      fetchSurvey();
-    }
-  }, [surveyId, currentUser]);
+    fetchSurvey();
+  }, [surveyId, currentUser, authLoading]);
 
   useEffect(() => {
     if (!selectedSurvey) {
@@ -341,6 +377,15 @@ function EditSurvey() {
       return;
     }
 
+    if (!canEditSurvey) {
+      showFeedback(
+        "error",
+        "Düzenleme yetkin bulunmuyor",
+        "Bu anketi yalnızca sahibi veya editör rolündeki kullanıcılar düzenleyebilir.",
+      );
+      return;
+    }
+
     const updatedSurvey = {
       ...selectedSurvey,
       title: title.trim() || "İsimsiz Anket",
@@ -393,6 +438,15 @@ function EditSurvey() {
     event.preventDefault();
 
     if (isSaving) {
+      return;
+    }
+
+    if (!canEditSurvey) {
+      showFeedback(
+        "error",
+        "Düzenleme yetkin bulunmuyor",
+        "Bu anketi yalnızca sahibi veya editör rolündeki kullanıcılar düzenleyebilir.",
+      );
       return;
     }
 
@@ -490,6 +544,35 @@ function EditSurvey() {
     );
   }
 
+  if (pageStatus === "error") {
+    return (
+      <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-lg">
+          <p className="font-stack-notch text-sm font-bold tracking-[0.15em] text-red-700">
+            BİR HATA OLUŞTU
+          </p>
+
+          <h1 className="font-stack-notch mt-2 text-2xl font-bold text-slate-950">
+            Anket yüklenemedi
+          </h1>
+
+          <p className="mt-3 text-sm font-medium text-slate-600">
+            Anket bilgileri alınırken beklenmeyen bir hata oluştu. Lütfen
+            sayfayı yenileyerek tekrar deneyin.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="mt-6 rounded-xl bg-amber-800 px-5 py-3 font-semibold text-white transition hover:bg-amber-900"
+          >
+            Anketlerime Dön
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   if (pageStatus === "forbidden") {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
@@ -501,11 +584,13 @@ function EditSurvey() {
           </p>
 
           <h1 className="font-stack-notch mt-2 text-2xl font-bold text-amber-950">
-            BU ANKET SANA AİT DEĞİL !
+            BU ANKETİ DÜZENLEME YETKİN YOK
           </h1>
 
           <p className="mt-3 text-sm font-medium text-slate-600">
-            Yalnızca kendi oluşturduğun anketleri düzenleyebilirsin.
+            Anketleri yalnızca sahibi veya editör rolündeki kullanıcılar
+            düzenleyebilir. Görüntüleyici rolündeysen yalnızca sonuçlara
+            erişebilirsin.
           </p>
 
           <button
@@ -545,6 +630,10 @@ function EditSurvey() {
 
             <p className="mt-1 text-sm font-medium text-slate-900">
               Anket ID: {surveyId}
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-amber-800">
+              Yetkin: {currentUserRole === "owner" ? "Sahip" : "Editör"}
             </p>
           </div>
 
