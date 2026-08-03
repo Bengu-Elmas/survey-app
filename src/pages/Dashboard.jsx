@@ -665,19 +665,36 @@ function Dashboard() {
                   />
                 </div>
 
-                <select
-                  value={sortOption}
-                  onChange={(event) => setSortOption(event.target.value)}
-                  aria-label="Anketleri sırala"
-                  className="h-12 w-full rounded-xl border border-amber-200 bg-white px-4 text-sm font-semibold text-amber-900 shadow-sm outline-none transition duration-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                >
-                  <option value="created-desc">En yeni oluşturulan</option>
-                  <option value="created-asc">En eski oluşturulan</option>
-                  <option value="updated-desc">Son güncellenen</option>
-                  <option value="updated-asc">En eski güncellenen</option>
-                  <option value="title-asc">İsme göre A–Z</option>
-                  <option value="title-desc">İsme göre Z–A</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={sortOption}
+                    onChange={(event) => setSortOption(event.target.value)}
+                    aria-label="Anketleri sırala"
+                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-amber-300 bg-white py-2 pl-4 pr-12 text-sm font-semibold text-amber-950 shadow-sm outline-none transition duration-200 hover:border-amber-400 hover:bg-amber-50 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                  >
+                    <option value="created-desc">En yeni oluşturulan</option>
+                    <option value="created-asc">En eski oluşturulan</option>
+                    <option value="updated-desc">Son güncellenen</option>
+                    <option value="updated-asc">En eski güncellenen</option>
+                    <option value="title-asc">İsme göre A–Z</option>
+                    <option value="title-desc">İsme göre Z–A</option>
+                  </select>
+
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-800"
+                  >
+                    <path
+                      d="m7 10 5 5 5-5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
