@@ -6,7 +6,7 @@ React, Tailwind CSS, Firebase Authentication ve Cloud Firestore kullanılarak ge
 
 ## Proje Hakkında
 
-Survey App, kullanıcıların hesap oluşturarak farklı soru tipleriyle anketler hazırlamasına, anketlerini taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır.
+Survey App, kullanıcıların hesap oluşturarak farklı soru tipleriyle anketler hazırlamasına, anketlerini taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır. Katılımcılar, anket başlamadan önce açılan bilgi formu üzerinden ad, soyad ve şehir bilgilerini girerek ankete katılır.
 
 Uygulamada global **Kullanıcı** ve **Admin** rolleri bulunur. Anket bazında ise **Anket Sahibi (Owner)**, **Editör** ve **Görüntüleyici (Viewer)** yetkileri kullanılır. Bu yapı sayesinde anket düzenleme, paylaşma, sonuç görüntüleme ve erişim yönetimi işlemleri kullanıcının rolüne göre sınırlandırılır.
 
@@ -79,12 +79,14 @@ Ayrıca:
 
 ### Anket Katılımı
 
-- Yayındaki anketleri bağlantı üzerinden doldurma
+- Yayındaki anketleri paylaşım bağlantısı üzerinden doldurma
+- Anket başlamadan önce açılan katılımcı bilgi penceresi
+- Katılımcının ad, soyad ve şehir bilgilerini manuel olarak girmesi
+- Katılımcı bilgilerini anket başlamadan önce doğrulama
+- Girilen katılımcı bilgilerini daha sonra düzenleyebilme
 - Zorunlu sorular için doğrulama
 - Anket ilerleme durumunu takip etme
-- **Random User API** ile katılımcı profili oluşturma
-- Katılımcının adı, konumu ve profil fotoğrafını yanıt bilgileriyle birlikte saklama
-- Yanıtları Firebase Firestore üzerinde kaydetme
+- Katılımcı bilgilerini yanıtlarla birlikte Firebase Firestore üzerinde saklama
 - Anket tamamlandıktan sonra teşekkür ekranına yönlendirme
 
 ### Sonuç Analizi
@@ -108,7 +110,8 @@ Ayrıca:
 - Tailwind CSS ile geliştirilmiş kullanıcı arayüzü
 - Özel amber renk paleti
 - Boxy SVG kullanılarak tarafımdan tasarlanan uygulama logosu
-- Boxy SVG kullanılarak tarafımdan tasarlanan taslak, yayında ve rol ikonları
+- Boxy SVG kullanılarak tarafımdan tasarlanan taslak ve yayında durum ikonları
+- User, Admin, Owner, Editör ve Viewer rollerine özel tasarlanan SVG ikonları
 - Projeye özel sürükle-bırak ikonu
 - Giriş, kayıt, kullanıcı profili ve şifre görünürlüğü için özel SVG ikonları
 - Admin hesabına özel Navbar, Dashboard, kart rozeti ve profil görünümü
@@ -128,6 +131,7 @@ Aşağıdaki görsel varlıklar **Bengü Elmas tarafından Boxy SVG kullanılara
 - Yayında durumunu temsil eden ikon
 - Sürükle-bırak işlemlerinde kullanılan özel ikonlar
 - Giriş, kayıt, kullanıcı profili ve şifre görünürlüğü ikonları
+- **User, Admin, Owner, Editör ve Viewer rollerine özel ikonlar**
 
 Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setinden alınmamış, Survey App projesinin görsel diliyle uyumlu olacak şekilde özel olarak hazırlanmıştır.
 
@@ -147,7 +151,6 @@ Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setind
 | **Cloud Firestore**         | Kullanıcı, rol, anket, erişim ve yanıt verilerinin saklanması |
 | **Recharts**                | Sonuç grafiklerinin oluşturulması                             |
 | **dnd-kit**                 | Sürükle-bırak soru sıralaması                                 |
-| **Random User API**         | Katılımcı profillerinin oluşturulması                         |
 | **Boxy SVG**                | Uygulama logosu ve projeye özel SVG ikonlarının tasarlanması  |
 | **Vercel**                  | Deployment ve hosting                                         |
 
@@ -159,7 +162,7 @@ Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setind
 | **Dashboard**     | Kullanıcı anketlerinin, admin panelinin ve genel istatistiklerin görüntülendiği sayfa |
 | **Create Survey** | Yeni anket oluşturma ekranı                                                           |
 | **Edit Survey**   | Yetkili kullanıcıların mevcut anketleri ve soruları düzenlediği ekran                 |
-| **Survey Fill**   | Katılımcıların anketi doldurduğu ekran                                                |
+| **Survey Fill**   | Katılımcı bilgi formunun ve anket sorularının görüntülendiği doldurma ekranı          |
 | **Results**       | Yetkili rollerin grafik, istatistik ve katılımcı yanıtlarını görüntülediği ekran      |
 | **Thank You**     | Anket gönderildikten sonra görüntülenen teşekkür ekranı                               |
 | **Register**      | Yeni kullanıcı hesabı oluşturma ekranı                                                |
@@ -177,8 +180,6 @@ Projeyi yerel ortamda çalıştırabilmek için aşağıdakilerin kurulu veya ha
 - Etkinleştirilmiş **Cloud Firestore** veritabanı
 - Etkinleştirilmiş **Email/Password Firebase Authentication** yöntemi
 - Firebase Web App yapılandırma bilgileri
-
-Random User API kullanımı için ayrıca bir API anahtarı gerekmemektedir.
 
 ---
 
@@ -260,9 +261,14 @@ Anketi Yayınla
         ↓
 Paylaşım Bağlantısı
         ↓
+Katılımcı Bilgi Formu
+        ↓
+Ad, Soyad ve Şehir Bilgileri Girilir
+        ↓
 Katılımcı Anketi Doldurur
         ↓
-Yanıtlar Firebase Firestore'a Kaydedilir
+Katılımcı Bilgileri ve Yanıtlar
+Firebase Firestore'a Kaydedilir
         ↓
 Sonuçlar ve Grafikler Oluşturulur
 ```
@@ -321,9 +327,10 @@ responses/
     ├── surveyId
     ├── surveyOwnerId
     ├── participant
+    │   ├── firstName
+    │   ├── lastName
     │   ├── fullName
-    │   ├── city
-    │   └── avatar
+    │   └── city
     ├── answers
     └── submittedAt
 ```
