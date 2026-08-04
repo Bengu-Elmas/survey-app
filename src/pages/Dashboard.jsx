@@ -146,7 +146,7 @@ function Dashboard() {
       return;
     }
 
-    if (!currentUser || !isAdmin) {
+    if (!currentUser) {
       setUsersById({});
       setUsersLoaded(true);
       return;
@@ -182,7 +182,7 @@ function Dashboard() {
     return () => {
       unsubscribeUsers();
     };
-  }, [currentUser, authLoading, isAdmin]);
+  }, [currentUser, authLoading]);
 
   /* ERİŞİLEBİLEN HER ANKETİN YANITLARINI AYRI AYRI DİNLE */
 
@@ -379,7 +379,7 @@ function Dashboard() {
           return {
             ...survey,
 
-            ownerProfile: isAdmin ? usersById[survey.ownerId] || null : null,
+            ownerProfile: usersById[survey.ownerId] || null,
 
             questionCount:
               survey.questions?.length ?? survey.questionCount ?? 0,
@@ -568,8 +568,7 @@ function Dashboard() {
     }
   }
 
-  const loading =
-    !surveysLoaded || !responsesLoaded || (isAdmin && !usersLoaded);
+  const loading = !surveysLoaded || !responsesLoaded || !usersLoaded;
 
   if (!currentUser) {
     return <GuestHome />;
@@ -613,7 +612,7 @@ function Dashboard() {
 
                 <h1 className="font-stack-notch mt-2 text-3xl font-bold md:text-4xl">
                   {isAdmin
-                    ? "Tüm kullanıcı anketlerini yönet"
+                    ? "TÜM KULLANICI ANKETLERİNİ YÖNET"
                     : "Anketlerini tek yerden yönet"}
                 </h1>
 

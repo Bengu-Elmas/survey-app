@@ -6,8 +6,22 @@ import FeedbackModal from "../components/FeedbackModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function Profile() {
-  const { currentUser, userProfile, updateAccountProfile, changePassword } =
-    useAuth();
+  const {
+    currentUser,
+    userProfile,
+    isAdmin,
+    updateAccountProfile,
+    changePassword,
+  } = useAuth();
+
+  const storedProfileName = (
+    userProfile?.fullName ||
+    userProfile?.name ||
+    currentUser?.displayName ||
+    ""
+  ).trim();
+
+  const profileDisplayName = storedProfileName || "Survey App Kullanıcısı";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -42,7 +56,7 @@ function Profile() {
       return;
     }
 
-    const displayNameParts = (currentUser.displayName || "").trim().split(" ");
+    const displayNameParts = storedProfileName.split(" ").filter(Boolean);
 
     setFirstName(userProfile?.firstName || displayNameParts[0] || "");
 
@@ -51,10 +65,15 @@ function Profile() {
     );
 
     setEmail(userProfile?.email || currentUser.email || "");
-  }, [currentUser, userProfile]);
+  }, [currentUser, userProfile, storedProfileName]);
 
-  const originalFirstName = userProfile?.firstName || "";
-  const originalLastName = userProfile?.lastName || "";
+  const originalNameParts = storedProfileName.split(" ").filter(Boolean);
+
+  const originalFirstName =
+    userProfile?.firstName || originalNameParts[0] || "";
+
+  const originalLastName =
+    userProfile?.lastName || originalNameParts.slice(1).join(" ") || "";
   const originalEmail = (
     userProfile?.email ||
     currentUser?.email ||
@@ -339,38 +358,47 @@ function Profile() {
                 className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold text-amber-50 backdrop-blur-sm transition duration-300 hover:bg-white/20"
               >
                 <span aria-hidden="true">←</span>
-                Anketlerime Dön
+                {isAdmin ? "Admin Paneline Dön" : "Anketlerime Dön"}
               </Link>
 
               <img
-                src="/usericon.svg"
+                src={isAdmin ? "/adminicon.svg" : "/usericon.svg"}
                 alt=""
                 className="mt-12 h-24 w-24 drop-shadow-xl"
               />
 
               <p className="font-stack-notch mt-7 text-base font-bold tracking-[0.18em] text-amber-200">
-                HESAP AYARLARI
+                {isAdmin ? "ADMIN HESAP AYARLARI" : "HESAP AYARLARI"}
               </p>
 
               <h1 className="font-stack-notch mt-4 max-w-md text-4xl font-bold leading-tight sm:text-5xl">
-                Profilin değiştiğinde Survey App de seninle güncellensin.
+                {isAdmin
+                  ? "Admin hesabını ve yönetim bilgilerini güncel tut."
+                  : "Profilin değiştiğinde Survey App de seninle güncellensin."}
               </h1>
 
               <p className="mt-6 max-w-md text-base font-medium leading-8 text-amber-50/90">
-                Kişisel bilgilerini güncel tut, hesabını düzenle ve anketlerini
-                kendi profilin üzerinden yönetmeye devam et.
+                {isAdmin
+                  ? "Profil bilgilerini düzenle ve Survey App içerisindeki kullanıcı anketlerini admin yetkinle yönetmeye devam et."
+                  : "Kişisel bilgilerini güncel tut, hesabını düzenle ve anketlerini kendi profilin üzerinden yönetmeye devam et."}
               </p>
             </div>
 
             <div className="relative z-10 mt-10 rounded-2xl border border-white/20 bg-amber-950/20 p-5 backdrop-blur-sm">
-              <p className="font-stack-notch text-sm font-bold text-amber-100">
-                Aktif kullanıcı
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-stack-notch text-sm font-bold text-amber-100">
+                  {isAdmin ? "Aktif admin hesabı" : "Aktif kullanıcı"}
+                </p>
+
+                {isAdmin && (
+                  <span className="rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-extrabold tracking-wide text-amber-950">
+                    ADMIN
+                  </span>
+                )}
+              </div>
 
               <p className="font-stack-notch mt-2 text-xl font-bold text-white">
-                {userProfile?.fullName ||
-                  currentUser?.displayName ||
-                  "Survey App Kullanıcısı"}
+                {profileDisplayName}
               </p>
 
               <p className="mt-1 text-sm font-medium text-amber-100/80">
@@ -391,11 +419,13 @@ function Profile() {
 
             <div className="relative z-10">
               <p className="font-stack-notch text-sm font-bold tracking-[0.16em] text-amber-700">
-                PROFİL BİLGİLERİ
+                {isAdmin ? "ADMIN HESAP BİLGİLERİ" : "HESAP BİLGİLERİN"}
               </p>
 
               <h2 className="font-stack-notch mt-2 text-3xl font-bold text-amber-950 sm:text-4xl">
-                Bilgilerini Güncelle
+                {isAdmin
+                  ? "Admin Bilgilerini Güncelle"
+                  : "Bilgilerini Güncelle"}
               </h2>
 
               <p className="mt-3 max-w-lg text-sm font-medium leading-6 text-slate-600">

@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 function Navbar() {
   const navigate = useNavigate();
 
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, isAdmin, logout } = useAuth();
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -58,7 +58,7 @@ function Navbar() {
                 to="/"
                 className="flex-1 rounded-xl px-3 py-3 text-center text-sm font-bold text-amber-900 transition duration-300 hover:bg-amber-100 sm:flex-none sm:px-5 sm:py-3.5"
               >
-                Anketlerim
+                {isAdmin ? "Kullanıcı Anketleri" : "Anketlerim"}
               </Link>
 
               <Link
@@ -78,15 +78,22 @@ function Navbar() {
                   className="flex w-full items-center justify-between gap-3 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-[#461901] shadow-sm transition duration-300 hover:border-amber-300 hover:bg-amber-100 hover:shadow-md sm:w-auto sm:justify-start sm:pr-4"
                 >
                   <img
-                    src="/usericon.svg"
+                    src={isAdmin ? "/adminicon.svg" : "/usericon.svg"}
                     alt=""
                     className="h-9 w-9 sm:h-10 sm:w-10"
                   />
 
-                  <span className="font-stack-notch min-w-0 flex-1 truncate text-left text-sm font-bold sm:max-w-32">
-                    {userName}
-                  </span>
+                  <div className="min-w-0 flex-1 text-left">
+                    <span className="font-stack-notch block truncate text-sm font-bold sm:max-w-32">
+                      {userName}
+                    </span>
 
+                    {isAdmin && (
+                      <span className="mt-0.5 block text-[10px] font-extrabold tracking-[0.15em] text-amber-700">
+                        ADMIN
+                      </span>
+                    )}
+                  </div>
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -111,12 +118,24 @@ function Navbar() {
                     {/* KULLANICI BİLGİLERİ */}
                     <div className="bg-gradient-to-br from-amber-50 to-white px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <img src="/usericon.svg" alt="" className="h-12 w-12" />
+                        <img
+                          src={isAdmin ? "/adminicon.svg" : "/usericon.svg"}
+                          alt=""
+                          className="h-12 w-12"
+                        />
 
                         <div className="min-w-0">
-                          <p className="font-stack-notch truncate text-base font-bold text-[#461901]">
-                            {userName}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-stack-notch truncate text-base font-bold text-[#461901]">
+                              {userName}
+                            </p>
+
+                            {isAdmin && (
+                              <span className="rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-amber-900">
+                                ADMIN
+                              </span>
+                            )}
+                          </div>
 
                           <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
                             {userEmail}

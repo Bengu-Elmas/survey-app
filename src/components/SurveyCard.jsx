@@ -118,6 +118,8 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
 
   const roleInfo = getRoleInfo(isAdmin ? "admin" : userRole);
   const statusIcon = getStatusIcon(survey.status);
+  const shouldShowOwnerInfo =
+    isAdmin || userRole === "editor" || userRole === "viewer";
   const ownerName =
     survey.ownerProfile?.fullName ||
     survey.ownerProfile?.name ||
@@ -167,7 +169,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
         </div>
       </div>
 
-      {isAdmin && (
+      {shouldShowOwnerInfo && (
         <div className="mt-4 flex w-full items-center gap-4 rounded-xl border border-amber-200 bg-white/70 px-4 py-3 shadow-sm">
           <img src="/ownericon.svg" alt="" className="h-11 w-11 shrink-0" />
 
