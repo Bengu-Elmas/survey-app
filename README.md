@@ -6,28 +6,46 @@ React, Tailwind CSS, Firebase Authentication ve Cloud Firestore kullanılarak ge
 
 ## Proje Hakkında
 
-Survey App, kullanıcıların hesap oluşturarak farklı soru tipleriyle anketler hazırlamasına, kendi anketlerini taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır.
+Survey App, kullanıcıların hesap oluşturarak farklı soru tipleriyle anketler hazırlamasına, anketlerini taslak veya yayında olarak yönetmesine, paylaşmasına ve katılımcılardan gelen yanıtları detaylı şekilde incelemesine olanak sağlayan bir web uygulamasıdır.
 
-Proje, frontend stajı kapsamında React ekosistemini, Firebase ile veri yönetimini, modern arayüz geliştirme yaklaşımlarını ve üçüncü parti kütüphanelerin kullanımını uygulamalı olarak öğrenmek amacıyla geliştirilmiştir.
+Uygulamada global **Kullanıcı** ve **Admin** rolleri bulunur. Anket bazında ise **Anket Sahibi (Owner)**, **Editör** ve **Görüntüleyici (Viewer)** yetkileri kullanılır. Bu yapı sayesinde anket düzenleme, paylaşma, sonuç görüntüleme ve erişim yönetimi işlemleri kullanıcının rolüne göre sınırlandırılır.
+
+Proje, frontend stajı kapsamında React ekosistemini, Firebase ile kimlik doğrulama ve veri yönetimini, rol bazlı yetkilendirmeyi, modern arayüz geliştirme yaklaşımlarını ve üçüncü parti kütüphanelerin kullanımını uygulamalı olarak öğrenmek amacıyla geliştirilmiştir.
 
 Arayüz tasarımında uygulamanın görsel bütünlüğüne özellikle önem verilmiştir. Survey App logosu ile uygulamada kullanılan özel SVG ikonları proje için tarafımdan tasarlanmıştır.
-
----
 
 ## Özellikler
 
 ### Kullanıcı Hesapları
 
 - Firebase Authentication ile kayıt olma, giriş yapma ve çıkış yapma
-- Kullanıcı bazlı anket sahipliği
-- Yalnızca hesap sahibinin erişebildiği düzenleme ve sonuç sayfaları
-- Ad, soyad ve e-posta bilgilerinin düzenlenebildiği profil sayfası
+- Giriş ekranından **Şifremi Unuttum** bağlantısıyla parola sıfırlama e-postası gönderme
+- Profil sayfasından ad, soyad ve e-posta bilgilerini güncelleme
 - E-posta değişikliklerinde doğrulama bağlantısı gönderme
+- Mevcut şifre doğrulanarak yeni şifre belirleme
+- Kullanıcı profillerini Cloud Firestore üzerinde saklama
+- Global **Kullanıcı** ve **Admin** rol ayrımı
+
+### Rol Bazlı Yetkilendirme
+
+Uygulamada anket bazlı üç kullanıcı rolü bulunur:
+
+- **Anket Sahibi (Owner):** Anketi düzenleyebilir, paylaşabilir, sonuçlarını görüntüleyebilir, kullanıcı yetkilendirebilir, kullanıcı erişimini kaldırabilir ve anketi silebilir.
+- **Editör:** Anketi düzenleyebilir, paylaşabilir ve sonuçlarını görüntüleyebilir.
+- **Görüntüleyici (Viewer):** Yalnızca anket sonuçlarını görüntüleyebilir.
+- **Admin:** Sistemdeki tüm kullanıcı anketlerini görüntüleyebilir ve anket sahibiyle aynı yönetim işlemlerini gerçekleştirebilir.
+
+Ek olarak:
+
+- Anket sahibi rolü değiştirilemez ve sahibin erişimi kaldırılamaz.
+- Admin işlemleri sırasında anketin gerçek `ownerId` bilgisi korunur.
+- Admin, editör ve görüntüleyici hesaplarında anket sahibinin adı, soyadı ve e-posta adresi kart üzerinde gösterilir.
+- Admin hesabında Navbar, Dashboard ve profil sayfası admin görünümüne uyarlanır.
 
 ### Anket Yönetimi
 
 - Yeni anket oluşturma
-- Mevcut anketleri düzenleme
+- Mevcut anketleri rol bazlı olarak düzenleme
 - Anketleri silme
 - Taslak ve yayında durum yönetimi
 - Yayındaki anketler için paylaşım bağlantısı oluşturma
@@ -37,6 +55,9 @@ Arayüz tasarımında uygulamanın görsel bütünlüğüne özellikle önem ver
 - Anket adına göre arama
 - Oluşturulma, güncellenme ve isme göre sıralama
 - Oluşturulma ve son güncellenme tarihlerini görüntüleme
+- Admin panelinde tüm kullanıcı anketlerini listeleme
+- Anket kartlarında uzun başlık ve açıklamaları belirli satır sayısında `...` ile kısaltma
+- Kart aksiyonlarını eşit yükseklikte ve aynı hizada gösterme
 
 ### Soru Yönetimi
 
@@ -68,6 +89,7 @@ Ayrıca:
 
 ### Sonuç Analizi
 
+- Yetkili kullanıcılar ve admin için sonuç erişimi
 - Toplam yanıt sayısını görüntüleme
 - Anket tamamlanma oranını hesaplama
 - Puanlama sorularının ortalama değerini görüntüleme
@@ -86,15 +108,14 @@ Ayrıca:
 - Tailwind CSS ile geliştirilmiş kullanıcı arayüzü
 - Özel amber renk paleti
 - Boxy SVG kullanılarak tarafımdan tasarlanan uygulama logosu
-- Boxy SVG kullanılarak tarafımdan tasarlanan taslak ve yayında durum ikonları
+- Boxy SVG kullanılarak tarafımdan tasarlanan taslak, yayında ve rol ikonları
 - Projeye özel sürükle-bırak ikonu
 - Giriş, kayıt, kullanıcı profili ve şifre görünürlüğü için özel SVG ikonları
+- Admin hesabına özel Navbar, Dashboard, kart rozeti ve profil görünümü
 - Giriş, kayıt ve profil sayfalarında hareketli amber arka plan tasarımı
 - Yükleme, hata ve boş durum ekranları
 - Responsive grafikler
 - Vercel üzerinde canlı deployment
-
----
 
 ## Tasarım ve Görsel Varlıklar
 
@@ -116,38 +137,34 @@ Bu görsel öğeler hazır bir ikon paketi veya üçüncü parti tasarım setind
 
 ## Kullanılan Teknolojiler
 
-| Teknoloji                   | Kullanım                                                     |
-| --------------------------- | ------------------------------------------------------------ |
-| **React**                   | Kullanıcı arayüzü ve component yapısı                        |
-| **Vite**                    | Geliştirme ve build ortamı                                   |
-| **Tailwind CSS**            | Arayüz tasarımı                                              |
-| **React Router**            | Sayfalar arası yönlendirme ve korumalı sayfalar              |
-| **Firebase Authentication** | Kayıt, giriş, oturum ve profil işlemleri                     |
-| **Cloud Firestore**         | Kullanıcı, anket ve yanıt verilerinin saklanması             |
-| **Recharts**                | Sonuç grafiklerinin oluşturulması                            |
-| **dnd-kit**                 | Sürükle-bırak soru sıralaması                                |
-| **Random User API**         | Katılımcı profillerinin oluşturulması                        |
-| **Boxy SVG**                | Uygulama logosu ve projeye özel SVG ikonlarının tasarlanması |
-| **Vercel**                  | Deployment ve hosting                                        |
-
----
+| Teknoloji                   | Kullanım                                                      |
+| --------------------------- | ------------------------------------------------------------- |
+| **React**                   | Kullanıcı arayüzü ve component yapısı                         |
+| **Vite**                    | Geliştirme ve build ortamı                                    |
+| **Tailwind CSS**            | Responsive arayüz tasarımı                                    |
+| **React Router**            | Sayfalar arası yönlendirme ve korumalı sayfalar               |
+| **Firebase Authentication** | Kayıt, giriş, oturum, parola sıfırlama ve profil işlemleri    |
+| **Cloud Firestore**         | Kullanıcı, rol, anket, erişim ve yanıt verilerinin saklanması |
+| **Recharts**                | Sonuç grafiklerinin oluşturulması                             |
+| **dnd-kit**                 | Sürükle-bırak soru sıralaması                                 |
+| **Random User API**         | Katılımcı profillerinin oluşturulması                         |
+| **Boxy SVG**                | Uygulama logosu ve projeye özel SVG ikonlarının tasarlanması  |
+| **Vercel**                  | Deployment ve hosting                                         |
 
 ## Sayfalar
 
-| Sayfa             | Açıklama                                                                 |
-| ----------------- | ------------------------------------------------------------------------ |
-| **Guest Home**    | Giriş yapmamış kullanıcılar için tanıtım ve yönlendirme sayfası          |
-| **Dashboard**     | Kullanıcıya ait anketlerin ve genel istatistiklerin görüntülendiği sayfa |
-| **Create Survey** | Yeni anket oluşturma ekranı                                              |
-| **Edit Survey**   | Mevcut anketleri ve soruları düzenleme ekranı                            |
-| **Survey Fill**   | Katılımcıların anketi doldurduğu ekran                                   |
-| **Results**       | Grafikler, istatistikler ve katılımcı yanıtlarının görüntülendiği ekran  |
-| **Thank You**     | Anket gönderildikten sonra görüntülenen teşekkür ekranı                  |
-| **Register**      | Yeni kullanıcı hesabı oluşturma ekranı                                   |
-| **Login**         | Kullanıcı giriş ekranı                                                   |
-| **Profile**       | Ad, soyad ve e-posta bilgilerinin güncellendiği hesap ayarları ekranı    |
-
----
+| Sayfa             | Açıklama                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| **Guest Home**    | Giriş yapmamış kullanıcılar için tanıtım ve yönlendirme sayfası                       |
+| **Dashboard**     | Kullanıcı anketlerinin, admin panelinin ve genel istatistiklerin görüntülendiği sayfa |
+| **Create Survey** | Yeni anket oluşturma ekranı                                                           |
+| **Edit Survey**   | Yetkili kullanıcıların mevcut anketleri ve soruları düzenlediği ekran                 |
+| **Survey Fill**   | Katılımcıların anketi doldurduğu ekran                                                |
+| **Results**       | Yetkili rollerin grafik, istatistik ve katılımcı yanıtlarını görüntülediği ekran      |
+| **Thank You**     | Anket gönderildikten sonra görüntülenen teşekkür ekranı                               |
+| **Register**      | Yeni kullanıcı hesabı oluşturma ekranı                                                |
+| **Login**         | Kullanıcı girişi ve şifremi unuttum işlemlerinin bulunduğu ekran                      |
+| **Profile**       | Profil, e-posta ve şifre bilgilerinin güncellendiği hesap ayarları ekranı             |
 
 ## Gereksinimler
 
@@ -197,6 +214,7 @@ survey-app/
 │   │   ├── FeedbackModal.jsx
 │   │   ├── Navbar.jsx
 │   │   ├── ProtectedRoute.jsx
+│   │   ├── SurveyAccessModal.jsx
 │   │   └── SurveyCard.jsx
 │   │
 │   ├── context/
@@ -257,7 +275,7 @@ Uygulamada üç temel Firestore collection kullanılmaktadır.
 
 ### `users`
 
-Kullanıcı profil bilgilerini saklar.
+Kullanıcı profil bilgilerini ve global uygulama rolünü saklar.
 
 ```text
 users/
@@ -266,19 +284,24 @@ users/
     ├── lastName
     ├── fullName
     ├── email
-    ├── role
+    ├── role              # "user" veya "admin"
     ├── createdAt
     └── updatedAt
 ```
 
 ### `surveys`
 
-Anket bilgilerini, soruları ve anket sahibini saklar.
+Anket bilgilerini, soruları, gerçek anket sahibini ve anket bazlı kullanıcı rollerini saklar.
 
 ```text
 surveys/
 └── surveyId
     ├── ownerId
+    ├── memberIds[]
+    ├── members
+    │   ├── ownerUserId: "owner"
+    │   ├── editorUserId: "editor"
+    │   └── viewerUserId: "viewer"
     ├── title
     ├── description
     ├── status
@@ -304,8 +327,6 @@ responses/
     ├── answers
     └── submittedAt
 ```
-
----
 
 ## Sonuç Analizi
 
@@ -364,15 +385,20 @@ Firebase Authentication ile kullanıcı oturumları yönetilmekte; oluşturma, d
 
 Firestore Security Rules ile:
 
-- Kullanıcılar yalnızca kendi profil belgelerini okuyabilir ve güncelleyebilir.
-- Kullanıcılar yalnızca kendi anketlerini düzenleyebilir ve silebilir.
-- Yayındaki anketler herkese açık olarak okunabilir ve doldurulabilir.
-- Taslak anketlere yalnızca anket sahibi erişebilir.
-- Yanıtlar yalnızca ilgili anketin sahibi tarafından okunabilir ve silinebilir.
+- Yeni oluşturulan kullanıcı profillerine varsayılan olarak `user` rolü atanır.
+- Kullanıcılar kendi profil bilgilerini güncelleyebilir ancak kendi global rolünü değiştiremez.
+- Admin hesabı sistemdeki tüm anketleri ve yetkili sonuç verilerini görüntüleyebilir.
+- Anket sahibi, editör ve görüntüleyici izinleri `memberIds` ve `members` alanları üzerinden kontrol edilir.
+- Anket sahibi ve admin kullanıcı erişimlerini yönetebilir.
+- Anket sahibinin `ownerId` bilgisi ve `owner` rolü admin işlemlerinde de korunur.
+- Editör anket içeriğini düzenleyebilir; görüntüleyici yalnızca sonuçlara erişebilir.
+- Anketleri yalnızca gerçek anket sahibi veya admin silebilir.
+- Yayındaki anketler paylaşım bağlantısı üzerinden okunabilir ve yanıtlanabilir.
+- Taslak anketler yetkisiz kullanıcılar tarafından doldurulamaz.
+- Yanıtlar yalnızca ilgili ankette sonuç görüntüleme yetkisi bulunan kullanıcılar ve admin tarafından okunabilir.
+- Yanıt silme işlemi yalnızca anket sahibi veya admin tarafından gerçekleştirilebilir.
 
 Firebase Web API anahtarının kullanım alanı Google Cloud Console üzerinden izin verilen web adresleri ve gerekli Firebase API'leri ile sınırlandırılmıştır.
-
----
 
 ## Görsel Haklar
 
