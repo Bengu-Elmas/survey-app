@@ -128,16 +128,22 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
   const ownerEmail = survey.ownerProfile?.email || "E-POSTA BİLGİSİ BULUNAMADI";
 
   return (
-    <article className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
+    <article className="flex h-full flex-col rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
       {/* BAŞLIK */}
 
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-stack-notch text-lg font-bold text-amber-950">
+        <div className="min-w-0 flex-1">
+          <h2
+            className="font-stack-notch line-clamp-2 min-h-[3.5rem] text-lg font-bold text-amber-950"
+            title={survey.title}
+          >
             {survey.title}
           </h2>
 
-          <p className="mt-1 text-sm font-medium text-slate-700">
+          <p
+            className="mt-1 line-clamp-2 min-h-10 text-sm font-medium leading-5 text-slate-700"
+            title={survey.description}
+          >
             {survey.description}
           </p>
         </div>
@@ -223,7 +229,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
 
       {/* TARİHLER */}
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-amber-200/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-2 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-stack-notch text-sm font-bold text-amber-900">
           Oluşturuldu:{" "}
           <span className="font-semibold text-amber-800">
@@ -241,7 +247,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
 
       {/* AKSİYON BUTONLARI */}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-amber-200/80 pt-5">
         {/* OWNER VE ADMIN */}
 
         {canManageAccess && (
