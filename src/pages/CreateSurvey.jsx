@@ -445,7 +445,7 @@ function CreateSurvey() {
 
           <form
             onSubmit={handlePublish}
-            className="mt-7 space-y-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-xl shadow-amber-200/30"
+            className="mt-7 space-y-7 rounded-3xl bg-gradient-to-br from-white via-white to-amber-50 p-7 shadow-[0_8px_24px_-10px_rgba(180,83,9,0.32)]"
           >
             {/* BAŞLIK */}
 

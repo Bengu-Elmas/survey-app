@@ -128,7 +128,7 @@ function SurveyCard({ survey, onShare, onDelete, onManageAccess }) {
   const ownerEmail = survey.ownerProfile?.email || "E-POSTA BİLGİSİ BULUNAMADI";
 
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/70 p-5 shadow-lg shadow-amber-200/30 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-300/40">
+    <article className="flex h-full flex-col rounded-2xl bg-gradient-to-br from-white via-amber-50/40 to-amber-100/60 p-5 shadow-[0_14px_28px_-14px_rgba(180,83,9,0.38)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_34px_-16px_rgba(180,83,9,0.48)]">
       {/* BAŞLIK */}
 
       <div className="flex items-start justify-between gap-4">
